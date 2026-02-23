@@ -91,8 +91,16 @@ function getWeights() {
       block.rows.forEach(rowNum => {
         const date   = cellVal(sheet, rowNum, 3); // col C
         const weight = cellVal(sheet, rowNum, 4); // col D
-        if (weight && !isNaN(parseFloat(weight))) {
-          weights.push({ date: formatDate(date), weight: parseFloat(weight), week: block.label });
+        const dateStr = formatDate(date);
+        if (dateStr) {
+          // Include ALL days (with or without weight) so the selector shows all options
+          weights.push({
+            date:   dateStr,
+            weight: (weight && !isNaN(parseFloat(weight))) ? parseFloat(weight) : null,
+            week:   block.label,
+            sheet:  sheetDef.name,
+            row:    rowNum
+          });
         }
       });
     });
@@ -133,6 +141,33 @@ function logWeight(dateStr, weightVal) {
     extra.appendRow([dateStr, weight]);
   }
   return { success: true, date: dateStr, weight, inserted: added ? 'sheet' : 'extra' };
+}
+
+// Escribe el peso en la fila exacta que corresponde a la fecha indicada
+function logWeightByDate(dateStr, weightVal) {
+  if (!dateStr || !weightVal) throw new Error('Faltan parámetros');
+  const weight = parseFloat(weightVal);
+  let found = false;
+
+  for (let si = 0; si < WEIGHT_SHEETS.length && !found; si++) {
+    const sheetDef = WEIGHT_SHEETS[si];
+    let sheet;
+    try { sheet = getSheet(sheetDef.name); } catch(e) { continue; }
+    for (let bi = 0; bi < sheetDef.blocks.length && !found; bi++) {
+      const block = sheetDef.blocks[bi];
+      for (let ri = 0; ri < block.rows.length && !found; ri++) {
+        const rowNum = block.rows[ri];
+        const rowDate = formatDate(cellVal(sheet, rowNum, 3)); // col C
+        if (rowDate === dateStr) {
+          sheet.getRange(rowNum, 4).setValue(weight); // col D
+          found = true;
+        }
+      }
+    }
+  }
+
+  if (!found) throw new Error('No se encontró la fecha ' + dateStr + ' en el sheet');
+  return { success: true, date: dateStr, weight };
 }
 
 // ─── DIETA ────────────────────────────────────────────────────────────────────

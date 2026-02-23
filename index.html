@@ -679,7 +679,13 @@
       </div>
 
       <div class="weight-form">
-        <div class="section-title">Registrar hoy</div>
+        <div class="section-title">Registrar peso</div>
+        <div style="margin-bottom:0.75rem">
+          <label class="auth-label" style="margin-bottom:0.4rem;display:block">Día</label>
+          <select id="weight-day" class="weight-input" style="font-size:0.8rem;padding:0.75rem 1rem;text-align:left;cursor:pointer">
+            <option value="">Cargando días...</option>
+          </select>
+        </div>
         <div class="weight-input-row">
           <input type="number" step="0.1" min="30" max="300" class="weight-input" id="weight-val" placeholder="75.5" inputmode="decimal" />
           <button class="btn-log" id="log-btn">Guardar</button>
@@ -839,6 +845,8 @@ function renderWeightHistory() {
   const lastEl = document.getElementById('last-weight');
   const trendEl = document.getElementById('weight-trend');
 
+  populateDaySelector(weightHistory);
+
   if (!weightHistory.length) {
     histEl.innerHTML = renderEmptyState('⚖️', 'Sin registros', 'Introduce tu primer peso arriba');
     return;
@@ -860,8 +868,10 @@ function renderWeightHistory() {
   }
 
   // History list (reversed, newest first)
-  const reversed = [...weightHistory].reverse();
-  histEl.innerHTML = reversed.map((entry, i) => {
+  // Show only entries with weight in history list
+  const withWeight = weightHistory.filter(e => e.weight);
+  const reversed = [...withWeight].reverse();
+  histEl.innerHTML = reversed.length ? reversed.map((entry, i) => {
     const prev = reversed[i + 1];
     let diffHtml = '';
     if (prev) {
@@ -879,23 +889,24 @@ function renderWeightHistory() {
         <span class="history-weight">${entry.weight} kg</span>
       </div>
     </div>`;
-  }).join('');
+  }).join('') : renderEmptyState('⚖️', 'Sin registros', 'Selecciona un día arriba e introduce tu peso');
 }
 
 document.getElementById('log-btn').addEventListener('click', async () => {
   const val = parseFloat(document.getElementById('weight-val').value);
-  if (!val || val < 30 || val > 300) {
-    showToast('Introduce un peso válido', true);
-    return;
-  }
+  const daySelect = document.getElementById('weight-day');
+  const selectedDay = daySelect.value;
+
+  if (!val || val < 30 || val > 300) { showToast('Introduce un peso válido', true); return; }
+  if (!selectedDay) { showToast('Selecciona un día', true); return; }
+
   const btn = document.getElementById('log-btn');
   btn.disabled = true;
   btn.textContent = '...';
   try {
-    const today = new Date().toLocaleDateString('es-ES', { day:'2-digit', month:'2-digit', year:'numeric' });
-    await callScript('logWeight', { date: today, weight: val });
+    await callScript('logWeightByDate', { date: selectedDay, weight: val });
     document.getElementById('weight-val').value = '';
-    showToast('✓ Peso guardado en Sheet');
+    showToast('✓ Peso guardado');
     loadWeights();
   } catch (e) {
     showToast(e.message === 'NO_URL' ? 'Configura el script primero' : 'Error al guardar', true);
@@ -904,6 +915,25 @@ document.getElementById('log-btn').addEventListener('click', async () => {
     btn.textContent = 'Guardar';
   }
 });
+
+function populateDaySelector(weights) {
+  const sel = document.getElementById('weight-day');
+  if (!weights || !weights.length) { sel.innerHTML = '<option value="">Sin días disponibles</option>'; return; }
+
+  // Build options: all days that have a date (with or without weight already)
+  const options = weights.map(w => {
+    const hasWeight = w.weight ? true : false;
+    const label = w.date + (hasWeight ? ' — ' + w.weight + ' kg ✓' : ' — sin registro');
+    return `<option value="${w.date}" ${hasWeight ? 'style="color:var(--accent)"' : ''}>${label}</option>`;
+  });
+
+  // Add a "today" option at top if today is not already in list
+  const today = new Date().toLocaleDateString('es-ES', { day:'2-digit', month:'2-digit', year:'numeric' });
+  const todayExists = weights.some(w => w.date === today);
+  const todayOption = todayExists ? '' : `<option value="${today}">Hoy (${today})</option>`;
+
+  sel.innerHTML = todayOption + options.reverse().join(''); // newest first
+}
 
 // ─── DIET ───
 const MEAL_ICONS = { 'Desayuno': '☀️', 'Comida': '🍽️', 'Merienda / Recena': '🕒', 'Cena': '🌙' };
