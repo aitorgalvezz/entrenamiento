@@ -1,0 +1,1039 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="FitBoard" />
+  <title>FitBoard</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0a0a0a;
+      --surface: #111111;
+      --surface2: #1a1a1a;
+      --border: #222222;
+      --accent: #c8f542;
+      --accent2: #42f5b3;
+      --text: #f0f0f0;
+      --muted: #555;
+      --danger: #ff4d4d;
+      --safe-top: env(safe-area-inset-top);
+      --safe-bottom: env(safe-area-inset-bottom);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Syne', sans-serif;
+      min-height: 100dvh;
+      overflow-x: hidden;
+    }
+
+    /* ── AUTH SCREEN ── */
+    #auth-screen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100dvh;
+      padding: 2rem;
+      background: radial-gradient(ellipse at 30% 20%, #1a2a0a 0%, var(--bg) 60%);
+    }
+
+    .auth-logo {
+      font-size: 3rem;
+      font-weight: 800;
+      letter-spacing: -0.05em;
+      margin-bottom: 0.25rem;
+    }
+    .auth-logo span { color: var(--accent); }
+
+    .auth-sub {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--muted);
+      letter-spacing: 0.15em;
+      margin-bottom: 3rem;
+      text-transform: uppercase;
+    }
+
+    .auth-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 2rem;
+      width: 100%;
+      max-width: 340px;
+    }
+
+    .auth-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.65rem;
+      letter-spacing: 0.12em;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 0.5rem;
+      display: block;
+    }
+
+    .auth-input {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 0.9rem 1rem;
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      font-size: 1rem;
+      outline: none;
+      transition: border-color 0.2s;
+      margin-bottom: 1rem;
+    }
+    .auth-input:focus { border-color: var(--accent); }
+
+    .btn-primary {
+      width: 100%;
+      background: var(--accent);
+      color: #000;
+      border: none;
+      border-radius: 12px;
+      padding: 1rem;
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 0.95rem;
+      letter-spacing: 0.05em;
+      cursor: pointer;
+      transition: opacity 0.15s, transform 0.1s;
+    }
+    .btn-primary:active { opacity: 0.85; transform: scale(0.98); }
+
+    .auth-error {
+      color: var(--danger);
+      font-family: 'DM Mono', monospace;
+      font-size: 0.7rem;
+      margin-top: 0.75rem;
+      text-align: center;
+      display: none;
+    }
+
+    /* ── MAIN APP ── */
+    #app { display: none; flex-direction: column; min-height: 100dvh; }
+
+    /* Header */
+    .header {
+      padding: calc(var(--safe-top) + 1rem) 1.5rem 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      background: rgba(10,10,10,0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      z-index: 10;
+    }
+
+    .header-logo { font-size: 1.4rem; font-weight: 800; letter-spacing: -0.04em; }
+    .header-logo span { color: var(--accent); }
+
+    .header-date {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.65rem;
+      color: var(--muted);
+      letter-spacing: 0.08em;
+      text-align: right;
+    }
+
+    /* Nav */
+    .nav {
+      display: flex;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .nav::-webkit-scrollbar { display: none; }
+
+    .nav-btn {
+      flex: 1;
+      min-width: 80px;
+      padding: 0.85rem 0.5rem;
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-family: 'Syne', sans-serif;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      cursor: pointer;
+      text-transform: uppercase;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .nav-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+    /* Content */
+    .content {
+      flex: 1;
+      padding: 1.5rem;
+      padding-bottom: calc(var(--safe-bottom) + 1.5rem);
+      overflow-y: auto;
+    }
+
+    .tab { display: none; }
+    .tab.active { display: block; }
+
+    /* Sections */
+    .section-title {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.6rem;
+      letter-spacing: 0.18em;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 1rem;
+    }
+
+    /* Weight tab */
+    .weight-hero {
+      background: linear-gradient(135deg, #1a2a0a, #0d1a05);
+      border: 1px solid #2a4a0a;
+      border-radius: 20px;
+      padding: 2rem;
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .weight-current-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.6rem;
+      letter-spacing: 0.15em;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 0.5rem;
+    }
+
+    .weight-current-val {
+      font-size: 4rem;
+      font-weight: 800;
+      letter-spacing: -0.05em;
+      color: var(--accent);
+      line-height: 1;
+    }
+
+    .weight-current-unit {
+      font-family: 'DM Mono', monospace;
+      font-size: 1rem;
+      color: var(--muted);
+      margin-bottom: 1rem;
+    }
+
+    .weight-trend {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.75rem;
+      padding: 0.35rem 0.75rem;
+      border-radius: 100px;
+      background: rgba(255,255,255,0.05);
+    }
+
+    .weight-form {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .weight-input-row {
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+    }
+
+    .weight-input {
+      flex: 1;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1rem;
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      font-size: 1.5rem;
+      font-weight: 400;
+      text-align: center;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .weight-input:focus { border-color: var(--accent); }
+    .weight-input::placeholder { color: var(--muted); }
+
+    .btn-log {
+      background: var(--accent);
+      color: #000;
+      border: none;
+      border-radius: 12px;
+      padding: 1rem 1.25rem;
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: opacity 0.15s, transform 0.1s;
+      white-space: nowrap;
+    }
+    .btn-log:active { opacity: 0.85; transform: scale(0.97); }
+    .btn-log:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* History */
+    .history-list { display: flex; flex-direction: column; gap: 0.5rem; }
+
+    .history-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 0.9rem 1.1rem;
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+    .history-date {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--muted);
+    }
+    .history-weight {
+      font-weight: 700;
+      font-size: 1rem;
+      color: var(--accent);
+    }
+    .history-diff {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.65rem;
+      padding: 0.2rem 0.5rem;
+      border-radius: 6px;
+    }
+    .diff-up { background: rgba(255,77,77,0.12); color: var(--danger); }
+    .diff-down { background: rgba(200,245,66,0.12); color: var(--accent); }
+    .diff-same { background: rgba(255,255,255,0.05); color: var(--muted); }
+
+    /* Diet / Training tabs */
+    .sheet-content {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      overflow: hidden;
+    }
+
+    .sheet-loading {
+      padding: 3rem;
+      text-align: center;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+
+    .meal-card {
+      border-bottom: 1px solid var(--border);
+      padding: 1.1rem 1.25rem;
+      animation: fadeIn 0.3s ease;
+    }
+    .meal-card:last-child { border-bottom: none; }
+
+    .meal-name {
+      font-weight: 700;
+      font-size: 0.95rem;
+      margin-bottom: 0.3rem;
+    }
+
+    .meal-desc {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .meal-macros {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 0.6rem;
+      flex-wrap: wrap;
+    }
+
+    .macro-pill {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.6rem;
+      padding: 0.2rem 0.55rem;
+      border-radius: 6px;
+      letter-spacing: 0.05em;
+    }
+    .macro-p { background: rgba(66,245,179,0.1); color: var(--accent2); }
+    .macro-c { background: rgba(200,245,66,0.1); color: var(--accent); }
+    .macro-f { background: rgba(255,200,66,0.1); color: #ffc842; }
+    .macro-k { background: rgba(255,255,255,0.05); color: var(--muted); }
+
+    /* Training */
+    .exercise-card {
+      border-bottom: 1px solid var(--border);
+      padding: 1.1rem 1.25rem;
+      animation: fadeIn 0.3s ease;
+    }
+    .exercise-card:last-child { border-bottom: none; }
+
+    .exercise-name { font-weight: 700; font-size: 0.95rem; margin-bottom: 0.3rem; }
+    .exercise-sets {
+      display: flex;
+      gap: 0.4rem;
+      flex-wrap: wrap;
+      margin-top: 0.5rem;
+    }
+    .set-pill {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.25rem 0.6rem;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.65rem;
+      color: var(--muted);
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: calc(var(--safe-bottom) + 1.5rem);
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: var(--accent);
+      color: #000;
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 0.85rem;
+      padding: 0.75rem 1.5rem;
+      border-radius: 100px;
+      z-index: 100;
+      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      white-space: nowrap;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+    .toast.error { background: var(--danger); color: #fff; }
+
+    /* Settings */
+    .settings-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      overflow: hidden;
+      margin-bottom: 1rem;
+    }
+    .settings-row {
+      display: flex;
+      flex-direction: column;
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+      gap: 0.4rem;
+    }
+    .settings-row:last-child { border-bottom: none; }
+    .settings-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.6rem;
+      letter-spacing: 0.12em;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+    .settings-input {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.7rem 0.9rem;
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      font-size: 0.8rem;
+      outline: none;
+      width: 100%;
+      transition: border-color 0.2s;
+    }
+    .settings-input:focus { border-color: var(--accent); }
+
+    .btn-save {
+      width: 100%;
+      background: var(--accent);
+      color: #000;
+      border: none;
+      border-radius: 12px;
+      padding: 1rem;
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+    .btn-save:active { opacity: 0.8; }
+
+    .btn-logout {
+      width: 100%;
+      background: transparent;
+      color: var(--danger);
+      border: 1px solid rgba(255,77,77,0.3);
+      border-radius: 12px;
+      padding: 1rem;
+      font-family: 'Syne', sans-serif;
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+      margin-top: 0.75rem;
+      transition: background 0.2s;
+    }
+    .btn-logout:active { background: rgba(255,77,77,0.1); }
+
+    .empty-state {
+      padding: 3rem 1.5rem;
+      text-align: center;
+    }
+    .empty-icon { font-size: 2.5rem; margin-bottom: 0.75rem; }
+    .empty-title { font-weight: 700; margin-bottom: 0.4rem; }
+    .empty-desc { font-family: 'DM Mono', monospace; font-size: 0.7rem; color: var(--muted); line-height: 1.6; }
+
+    .spinner {
+      display: inline-block;
+      width: 16px; height: 16px;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      vertical-align: middle;
+      margin-right: 0.4rem;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .status-dot {
+      display: inline-block;
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+      margin-right: 0.3rem;
+      animation: pulse 2s ease infinite;
+    }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+    .diet-toggle {
+      flex: 1;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.6rem;
+      color: var(--muted);
+      font-family: 'Syne', sans-serif;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .diet-toggle.active { background: var(--accent); color: #000; border-color: var(--accent); }
+
+    .session-header {
+      background: var(--surface2);
+      border-bottom: 1px solid var(--border);
+      padding: 0.7rem 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .session-label {
+      font-weight: 700;
+      font-size: 0.85rem;
+    }
+    .session-type {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.6rem;
+      color: var(--accent2);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .exercise-card { border-bottom: 1px solid var(--border); padding: 1rem 1.25rem; }
+    .exercise-card:last-child { border-bottom: none; }
+    .exercise-name { font-weight: 700; font-size: 0.9rem; margin-bottom: 0.3rem; }
+    .exercise-prep { font-weight: 600; font-size: 0.8rem; color: var(--muted); margin-bottom: 0.3rem; }
+    .exercise-detail {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.65rem;
+      color: var(--muted);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      margin-top: 0.4rem;
+    }
+    .ex-tag {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0.2rem 0.5rem;
+    }
+    .ex-tag.reps { color: var(--accent); border-color: rgba(200,245,66,0.3); }
+    .ex-tag.series { color: var(--accent2); border-color: rgba(66,245,179,0.3); }
+    .ex-video {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      margin-top: 0.4rem;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.6rem;
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .option-block {
+      background: var(--surface2);
+      border-radius: 10px;
+      margin: 0.75rem 1.25rem;
+      overflow: hidden;
+    }
+    .option-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.6rem;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      text-transform: uppercase;
+      padding: 0.5rem 0.75rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .food-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.5rem 0.75rem;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+    .food-row:last-child { border-bottom: none; }
+    .food-name { font-size: 0.8rem; }
+    .food-right { display: flex; gap: 0.4rem; align-items: center; }
+    .food-macro {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.6rem;
+      padding: 0.15rem 0.45rem;
+      border-radius: 5px;
+      background: rgba(200,245,66,0.08);
+      color: var(--accent);
+    }
+    .food-qty {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.65rem;
+      color: var(--muted);
+    }
+    .meal-section-header {
+      padding: 1rem 1.25rem 0.25rem;
+      font-weight: 700;
+      font-size: 0.85rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+  </style>
+</head>
+<body>
+
+<!-- AUTH -->
+<div id="auth-screen">
+  <div class="auth-logo">Fit<span>Board</span></div>
+  <div class="auth-sub">Tu entrenamiento, limpio</div>
+  <div class="auth-card">
+    <label class="auth-label">Contraseña</label>
+    <input type="password" class="auth-input" id="pw-input" placeholder="••••••••" autocomplete="current-password" />
+    <button class="btn-primary" id="login-btn">Entrar</button>
+    <div class="auth-error" id="auth-error">Contraseña incorrecta</div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="header">
+    <div class="header-logo">Fit<span>Board</span></div>
+    <div class="header-date" id="header-date"></div>
+  </div>
+  <nav class="nav">
+    <button class="nav-btn active" data-tab="weight">⚖️ Peso</button>
+    <button class="nav-btn" data-tab="diet">🥗 Dieta</button>
+    <button class="nav-btn" data-tab="training">💪 Entreno</button>
+    <button class="nav-btn" data-tab="settings">⚙️ Config</button>
+  </nav>
+  <div class="content">
+
+    <!-- WEIGHT TAB -->
+    <div class="tab active" id="tab-weight">
+      <div class="weight-hero">
+        <div class="weight-current-label">Último registro</div>
+        <div class="weight-current-val" id="last-weight">—</div>
+        <div class="weight-current-unit">kg</div>
+        <div class="weight-trend" id="weight-trend">Sin datos previos</div>
+      </div>
+
+      <div class="weight-form">
+        <div class="section-title">Registrar hoy</div>
+        <div class="weight-input-row">
+          <input type="number" step="0.1" min="30" max="300" class="weight-input" id="weight-val" placeholder="75.5" inputmode="decimal" />
+          <button class="btn-log" id="log-btn">Guardar</button>
+        </div>
+      </div>
+
+      <div class="section-title">Historial</div>
+      <div class="history-list" id="history-list">
+        <div class="sheet-loading"><span class="spinner"></span>Cargando...</div>
+      </div>
+    </div>
+
+    <!-- DIET TAB -->
+    <div class="tab" id="tab-diet">
+      <div style="display:flex;gap:0.5rem;margin-bottom:1.25rem">
+        <button class="diet-toggle active" data-type="entreno">🏋️ Entreno</button>
+        <button class="diet-toggle" data-type="descanso">💤 Descanso</button>
+      </div>
+      <div class="sheet-content" id="diet-content">
+        <div class="sheet-loading"><span class="spinner"></span>Cargando dieta...</div>
+      </div>
+    </div>
+
+    <!-- TRAINING TAB -->
+    <div class="tab" id="tab-training">
+      <div class="section-title" style="margin-bottom:1rem">Plan de entrenamiento</div>
+      <div class="sheet-content" id="training-content">
+        <div class="sheet-loading"><span class="spinner"></span>Cargando entreno...</div>
+      </div>
+    </div>
+
+    <!-- SETTINGS TAB -->
+    <div class="tab" id="tab-settings">
+      <div class="section-title" style="margin-bottom:1rem">Configuración</div>
+      <div class="settings-card">
+        <div class="settings-row">
+          <label class="settings-label">URL del Google Apps Script</label>
+          <input type="url" class="settings-input" id="script-url" placeholder="https://script.google.com/macros/s/..." />
+        </div>
+        <div class="settings-row">
+          <label class="settings-label">Contraseña de acceso</label>
+          <input type="password" class="settings-input" id="new-password" placeholder="Nueva contraseña" />
+        </div>
+      </div>
+      <button class="btn-save" id="save-settings">Guardar configuración</button>
+      <button class="btn-logout" id="logout-btn">Cerrar sesión</button>
+      <p style="font-family:'DM Mono',monospace;font-size:0.6rem;color:var(--muted);text-align:center;margin-top:1.5rem;line-height:1.7">
+        <span class="status-dot"></span>FitBoard v1.0 — Datos en tu Google Sheet<br>
+        Añade a pantalla de inicio para experiencia nativa
+      </p>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ─── CONFIG ───
+const DEFAULT_PASSWORD = 'fitboard2024'; // Cambia esto
+const STORAGE_KEY_AUTH = 'fb_auth';
+const STORAGE_KEY_SCRIPT = 'fb_script_url';
+const STORAGE_KEY_PW = 'fb_password';
+
+// ─── STATE ───
+let scriptUrl = localStorage.getItem(STORAGE_KEY_SCRIPT) || '';
+let appPassword = localStorage.getItem(STORAGE_KEY_PW) || DEFAULT_PASSWORD;
+let weightHistory = [];
+
+// ─── AUTH ───
+const authScreen = document.getElementById('auth-screen');
+const app = document.getElementById('app');
+const pwInput = document.getElementById('pw-input');
+const loginBtn = document.getElementById('login-btn');
+const authError = document.getElementById('auth-error');
+
+function checkAuth() {
+  const session = sessionStorage.getItem(STORAGE_KEY_AUTH);
+  if (session === 'ok') showApp();
+}
+
+loginBtn.addEventListener('click', () => {
+  if (pwInput.value === appPassword) {
+    sessionStorage.setItem(STORAGE_KEY_AUTH, 'ok');
+    authError.style.display = 'none';
+    showApp();
+  } else {
+    authError.style.display = 'block';
+    pwInput.value = '';
+    pwInput.focus();
+  }
+});
+pwInput.addEventListener('keydown', e => { if (e.key === 'Enter') loginBtn.click(); });
+
+function showApp() {
+  authScreen.style.display = 'none';
+  app.style.display = 'flex';
+  initApp();
+}
+
+// ─── INIT ───
+function initApp() {
+  // Date header
+  const now = new Date();
+  document.getElementById('header-date').innerHTML =
+    now.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'short' }).toUpperCase() +
+    '<br>' + now.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+
+  // Load data
+  loadWeights();
+  loadDiet('entreno');
+  loadTraining();
+
+  // Settings prefill
+  document.getElementById('script-url').value = scriptUrl;
+}
+
+// ─── NAV ───
+document.querySelectorAll('.nav-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+  });
+});
+
+// ─── API CALL ───
+async function callScript(action, data = {}) {
+  if (!scriptUrl) throw new Error('NO_URL');
+  const url = new URL(scriptUrl);
+  url.searchParams.set('action', action);
+  Object.entries(data).forEach(([k, v]) => url.searchParams.set(k, v));
+  const res = await fetch(url.toString());
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  return res.json();
+}
+
+// ─── WEIGHT ───
+async function loadWeights() {
+  const histEl = document.getElementById('history-list');
+  try {
+    const data = await callScript('getWeights');
+    weightHistory = data.weights || [];
+    renderWeightHistory();
+  } catch (e) {
+    if (e.message === 'NO_URL') {
+      histEl.innerHTML = renderEmptyState('⚙️', 'Configura el script', 'Ve a Config e introduce la URL de tu Google Apps Script');
+    } else {
+      histEl.innerHTML = renderEmptyState('📡', 'Sin conexión', 'Revisa la URL del script en Configuración');
+    }
+  }
+}
+
+function renderWeightHistory() {
+  const histEl = document.getElementById('history-list');
+  const lastEl = document.getElementById('last-weight');
+  const trendEl = document.getElementById('weight-trend');
+
+  if (!weightHistory.length) {
+    histEl.innerHTML = renderEmptyState('⚖️', 'Sin registros', 'Introduce tu primer peso arriba');
+    return;
+  }
+
+  // Last weight
+  const last = weightHistory[weightHistory.length - 1];
+  lastEl.textContent = last.weight;
+
+  // Trend
+  if (weightHistory.length >= 2) {
+    const prev = weightHistory[weightHistory.length - 2];
+    const diff = (last.weight - prev.weight).toFixed(1);
+    const sign = diff > 0 ? '+' : '';
+    trendEl.innerHTML = `${sign}${diff} kg vs ayer`;
+    trendEl.style.color = diff > 0 ? 'var(--danger)' : diff < 0 ? 'var(--accent)' : 'var(--muted)';
+  } else {
+    trendEl.textContent = 'Primer registro';
+  }
+
+  // History list (reversed, newest first)
+  const reversed = [...weightHistory].reverse();
+  histEl.innerHTML = reversed.map((entry, i) => {
+    const prev = reversed[i + 1];
+    let diffHtml = '';
+    if (prev) {
+      const d = (entry.weight - prev.weight).toFixed(1);
+      const cls = d > 0 ? 'diff-up' : d < 0 ? 'diff-down' : 'diff-same';
+      const sign = d > 0 ? '+' : '';
+      diffHtml = `<span class="history-diff ${cls}">${sign}${d}</span>`;
+    }
+    return `<div class="history-item">
+      <div>
+        <div class="history-date">${entry.date}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:0.5rem">
+        ${diffHtml}
+        <span class="history-weight">${entry.weight} kg</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+document.getElementById('log-btn').addEventListener('click', async () => {
+  const val = parseFloat(document.getElementById('weight-val').value);
+  if (!val || val < 30 || val > 300) {
+    showToast('Introduce un peso válido', true);
+    return;
+  }
+  const btn = document.getElementById('log-btn');
+  btn.disabled = true;
+  btn.textContent = '...';
+  try {
+    const today = new Date().toLocaleDateString('es-ES', { day:'2-digit', month:'2-digit', year:'numeric' });
+    await callScript('logWeight', { date: today, weight: val });
+    document.getElementById('weight-val').value = '';
+    showToast('✓ Peso guardado en Sheet');
+    loadWeights();
+  } catch (e) {
+    showToast(e.message === 'NO_URL' ? 'Configura el script primero' : 'Error al guardar', true);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Guardar';
+  }
+});
+
+// ─── DIET ───
+const MEAL_ICONS = { 'Desayuno': '☀️', 'Comida': '🍽️', 'Merienda / Recena': '🕒', 'Cena': '🌙' };
+
+async function loadDiet(type = 'entreno') {
+  const el = document.getElementById('diet-content');
+  el.innerHTML = '<div class="sheet-loading"><span class="spinner"></span>Cargando dieta...</div>';
+  try {
+    const data = await callScript('getDiet', { type });
+    const meals = data.meals || [];
+    if (!meals.length) { el.innerHTML = renderEmptyState('🥗', 'Sin datos de dieta', 'No hay datos en la pestaña de dieta'); return; }
+    el.innerHTML = meals.map(meal => `
+      <div class="meal-section-header">${MEAL_ICONS[meal.meal] || '🍴'} ${escHtml(meal.meal)}</div>
+      ${(meal.options || []).map(opt => `
+        <div class="option-block">
+          <div class="option-label">${escHtml(opt.option)}</div>
+          ${(opt.foods || []).map(f => `
+            <div class="food-row">
+              <span class="food-name">${escHtml(f.food)}</span>
+              <div class="food-right">
+                ${f.macro ? `<span class="food-macro">${escHtml(f.macro)}</span>` : ''}
+                ${f.qty ? `<span class="food-qty">${escHtml(f.qty)}</span>` : ''}
+              </div>
+            </div>`).join('')}
+        </div>`).join('')}
+    `).join('');
+  } catch (e) {
+    el.innerHTML = e.message === 'NO_URL'
+      ? renderEmptyState('⚙️', 'Configura el script', 'Ve a Config e introduce la URL')
+      : renderEmptyState('📡', 'Sin conexión', 'Revisa tu URL en Configuración');
+  }
+}
+
+// Diet toggle
+document.querySelectorAll('.diet-toggle').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.diet-toggle').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    loadDiet(btn.dataset.type);
+  });
+});
+
+// ─── TRAINING ───
+async function loadTraining() {
+  const el = document.getElementById('training-content');
+  try {
+    const data = await callScript('getTraining');
+    const sessions = data.sessions || [];
+    if (!sessions.length) { el.innerHTML = renderEmptyState('💪', 'Sin datos de entreno', 'No hay datos en las pestañas de entrenamiento'); return; }
+    
+    el.innerHTML = sessions.map(session => {
+      const exercises = (session.exercises || []);
+      const mainExercises = exercises.filter(e => !e.isPrep);
+      const prepExercises = exercises.filter(e => e.isPrep);
+      return `
+        <div class="session-header">
+          <div>
+            <div class="session-label">${escHtml(session.session)}</div>
+            ${session.type ? `<div class="session-type">${escHtml(session.type)}</div>` : ''}
+          </div>
+        </div>
+        ${prepExercises.length ? `
+          <div class="exercise-card">
+            <div class="exercise-prep" style="margin-bottom:0.4rem">🔥 Preparación</div>
+            ${prepExercises.map(e => `
+              <div style="padding:0.3rem 0;border-bottom:1px solid rgba(255,255,255,0.04)">
+                <span class="food-name" style="font-size:0.75rem">${escHtml(e.name)}</span>
+                <span class="food-qty" style="margin-left:0.5rem">${escHtml(e.reps)}</span>
+              </div>`).join('')}
+          </div>` : ''}
+        ${mainExercises.map(ex => `
+          <div class="exercise-card">
+            <div class="exercise-name"><span style="color:var(--accent);margin-right:0.4rem">${escHtml(ex.order)}</span>${escHtml(ex.name)}</div>
+            <div class="exercise-detail">
+              ${ex.reps ? `<span class="ex-tag reps">📊 ${escHtml(ex.reps)}</span>` : ''}
+              ${ex.series.length ? `<span class="ex-tag series">✕${ex.series[0]} series</span>` : ''}
+              ${ex.rir ? `<span class="ex-tag">RIR ${escHtml(ex.rir)}</span>` : ''}
+            </div>
+            ${ex.video ? `<a class="ex-video" href="${escHtml(ex.video)}" target="_blank">▶ Ver vídeo</a>` : ''}
+          </div>`).join('')}`;
+    }).join('');
+  } catch (e) {
+    el.innerHTML = e.message === 'NO_URL'
+      ? renderEmptyState('⚙️', 'Configura el script', 'Ve a Config e introduce la URL')
+      : renderEmptyState('📡', 'Sin conexión', 'Revisa tu URL en Configuración');
+  }
+}
+
+// ─── SETTINGS ───
+document.getElementById('save-settings').addEventListener('click', () => {
+  const url = document.getElementById('script-url').value.trim();
+  const pw = document.getElementById('new-password').value.trim();
+  if (url) { scriptUrl = url; localStorage.setItem(STORAGE_KEY_SCRIPT, url); }
+  if (pw) { appPassword = pw; localStorage.setItem(STORAGE_KEY_PW, pw); }
+  showToast('✓ Configuración guardada');
+  if (url) { loadWeights(); loadDiet(); loadTraining(); }
+});
+
+document.getElementById('logout-btn').addEventListener('click', () => {
+  sessionStorage.removeItem(STORAGE_KEY_AUTH);
+  app.style.display = 'none';
+  authScreen.style.display = 'flex';
+  pwInput.value = '';
+});
+
+// ─── HELPERS ───
+function renderEmptyState(icon, title, desc) {
+  return `<div class="empty-state">
+    <div class="empty-icon">${icon}</div>
+    <div class="empty-title">${title}</div>
+    <div class="empty-desc">${desc}</div>
+  </div>`;
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+let toastTimer;
+function showToast(msg, error = false) {
+  const t = document.getElementById('toast');
+  clearTimeout(toastTimer);
+  t.textContent = msg;
+  t.className = 'toast' + (error ? ' error' : '');
+  requestAnimationFrame(() => t.classList.add('show'));
+  toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ─── BOOT ───
+checkAuth();
+</script>
+</body>
+</html>

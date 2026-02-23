@@ -1,0 +1,21 @@
+{
+  "name": "FitBoard",
+  "short_name": "FitBoard",
+  "description": "Tu entrenamiento y dieta, limpio",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#0a0a0a",
+  "theme_color": "#0a0a0a",
+  "icons": [
+    {
+      "src": "https://placehold.co/192x192/c8f542/000000?text=FB",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://placehold.co/512x512/c8f542/000000?text=FB",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
