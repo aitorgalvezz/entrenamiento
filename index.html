@@ -9,733 +9,260 @@
   <title>FitBoard</title>
   <link rel="manifest" href="manifest.json" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@300;400&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #0a0a0a;
-      --surface: #111111;
-      --surface2: #1a1a1a;
-      --border: #222222;
-      --accent: #c8f542;
-      --accent2: #42f5b3;
-      --text: #f0f0f0;
-      --muted: #555;
-      --danger: #ff4d4d;
-      --safe-top: env(safe-area-inset-top);
-      --safe-bottom: env(safe-area-inset-bottom);
+      --bg:#080808;--s1:#0f0f0f;--s2:#161616;--s3:#1e1e1e;
+      --border:#262626;--border2:#333;
+      --lime:#d4f53c;--lime-dim:rgba(212,245,60,0.12);
+      --teal:#3cfbcb;--teal-dim:rgba(60,251,203,0.1);
+      --red:#ff4444;--red-dim:rgba(255,68,68,0.1);
+      --text:#efefef;--text2:#888;--text3:#555;
+      --safe-t:env(safe-area-inset-top);--safe-b:env(safe-area-inset-bottom);
     }
+    *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+    html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;overflow:hidden}
 
-    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    /* AUTH */
+    #auth{
+      position:fixed;inset:0;display:flex;flex-direction:column;
+      align-items:center;justify-content:center;background:var(--bg);z-index:100;padding:2rem;
+      background-image:radial-gradient(ellipse 80% 60% at 50% 0%,rgba(212,245,60,0.06) 0%,transparent 70%);
+    }
+    .auth-title{font-family:'Bebas Neue',sans-serif;font-size:4.5rem;letter-spacing:0.05em;line-height:1;margin-bottom:0.15rem}
+    .auth-title em{color:var(--lime);font-style:normal}
+    .auth-sub{font-family:'JetBrains Mono',monospace;font-size:0.6rem;color:var(--text3);letter-spacing:0.2em;text-transform:uppercase;margin-bottom:3rem}
+    .auth-box{width:100%;max-width:320px;background:var(--s1);border:1px solid var(--border);border-radius:16px;padding:1.5rem}
+    .field-label{font-family:'JetBrains Mono',monospace;font-size:0.55rem;letter-spacing:0.15em;color:var(--text3);text-transform:uppercase;display:block;margin-bottom:0.5rem}
+    .field-input{width:100%;background:var(--s2);border:1px solid var(--border);border-radius:10px;padding:0.85rem 1rem;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:0.9rem;outline:none;transition:border-color 0.2s;margin-bottom:1rem}
+    .field-input:focus{border-color:var(--lime)}
+    .btn-enter{width:100%;background:var(--lime);color:#000;border:none;border-radius:10px;padding:0.9rem;font-family:'Inter',sans-serif;font-weight:600;font-size:0.85rem;cursor:pointer;transition:opacity 0.15s,transform 0.1s}
+    .btn-enter:active{opacity:0.8;transform:scale(0.98)}
+    .auth-err{font-family:'JetBrains Mono',monospace;font-size:0.65rem;color:var(--red);text-align:center;margin-top:0.75rem;display:none}
 
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: 'Syne', sans-serif;
-      min-height: 100dvh;
-      overflow-x: hidden;
-    }
+    /* LAYOUT */
+    #app{display:none;flex-direction:column;height:100vh;height:100dvh}
+    .hdr{flex-shrink:0;padding:calc(var(--safe-t) + 0.9rem) 1.25rem 0.9rem;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);background:rgba(8,8,8,0.9);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px)}
+    .hdr-logo{font-family:'Bebas Neue',sans-serif;font-size:1.6rem;letter-spacing:0.06em}
+    .hdr-logo em{color:var(--lime);font-style:normal}
+    .hdr-day{font-family:'JetBrains Mono',monospace;font-size:0.58rem;color:var(--text3);letter-spacing:0.06em;text-transform:uppercase;text-align:right}
 
-    /* ── AUTH SCREEN ── */
-    #auth-screen {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      min-height: 100dvh;
-      padding: 2rem;
-      background: radial-gradient(ellipse at 30% 20%, #1a2a0a 0%, var(--bg) 60%);
-    }
+    .nav{flex-shrink:0;display:flex;background:var(--s1);border-bottom:1px solid var(--border)}
+    .nav-btn{flex:1;padding:0.75rem 0.25rem;background:none;border:none;color:var(--text3);font-family:'Inter',sans-serif;font-size:0.6rem;font-weight:500;letter-spacing:0.04em;text-transform:uppercase;cursor:pointer;border-bottom:2px solid transparent;transition:color 0.2s,border-color 0.2s;display:flex;flex-direction:column;align-items:center;gap:0.2rem}
+    .nav-btn .ico{font-size:1rem}
+    .nav-btn.active{color:var(--lime);border-bottom-color:var(--lime)}
 
-    .auth-logo {
-      font-size: 3rem;
-      font-weight: 800;
-      letter-spacing: -0.05em;
-      margin-bottom: 0.25rem;
-    }
-    .auth-logo span { color: var(--accent); }
+    .content{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
+    .tab{display:none;padding:1.25rem;padding-bottom:calc(var(--safe-b) + 4rem)}
+    .tab.active{display:block}
 
-    .auth-sub {
-      font-family: 'DM Mono', monospace;
-      font-size: 0.7rem;
-      color: var(--muted);
-      letter-spacing: 0.15em;
-      margin-bottom: 3rem;
-      text-transform: uppercase;
-    }
+    /* SHARED */
+    .lbl{font-family:'JetBrains Mono',monospace;font-size:0.55rem;letter-spacing:0.18em;color:var(--text3);text-transform:uppercase;margin-bottom:0.75rem;display:block}
+    .card{background:var(--s1);border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-bottom:1rem}
 
-    .auth-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 2rem;
-      width: 100%;
-      max-width: 340px;
-    }
+    /* WEIGHT */
+    .stat-hero{background:var(--s1);border:1px solid var(--border);border-radius:16px;padding:1.5rem;margin-bottom:1rem;position:relative;overflow:hidden}
+    .stat-hero::before{content:'';position:absolute;top:-40px;right:-40px;width:160px;height:160px;border-radius:50%;background:radial-gradient(circle,rgba(212,245,60,0.07) 0%,transparent 70%)}
+    .stat-lbl{font-family:'JetBrains Mono',monospace;font-size:0.55rem;color:var(--text3);letter-spacing:0.18em;text-transform:uppercase;margin-bottom:0.5rem}
+    .stat-val{font-family:'Bebas Neue',sans-serif;font-size:5rem;color:var(--lime);line-height:1;letter-spacing:0.02em}
+    .stat-unit{font-family:'JetBrains Mono',monospace;font-size:0.75rem;color:var(--text3);margin-bottom:0.75rem}
+    .stat-badge{display:inline-flex;align-items:center;font-family:'JetBrains Mono',monospace;font-size:0.65rem;padding:0.3rem 0.7rem;border-radius:100px;background:var(--s3);color:var(--text2)}
+    .stat-badge.up{background:var(--red-dim);color:var(--red)}
+    .stat-badge.down{background:var(--lime-dim);color:var(--lime)}
 
-    .auth-label {
-      font-family: 'DM Mono', monospace;
-      font-size: 0.65rem;
-      letter-spacing: 0.12em;
-      color: var(--muted);
-      text-transform: uppercase;
-      margin-bottom: 0.5rem;
-      display: block;
-    }
+    .chart-wrap{background:var(--s1);border:1px solid var(--border);border-radius:16px;padding:1.25rem;margin-bottom:1rem}
+    .chart-lbl{font-family:'JetBrains Mono',monospace;font-size:0.55rem;color:var(--text3);letter-spacing:0.18em;text-transform:uppercase;margin-bottom:1rem}
 
-    .auth-input {
-      width: 100%;
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 0.9rem 1rem;
-      color: var(--text);
-      font-family: 'DM Mono', monospace;
-      font-size: 1rem;
-      outline: none;
-      transition: border-color 0.2s;
-      margin-bottom: 1rem;
-    }
-    .auth-input:focus { border-color: var(--accent); }
+    .log-card{background:var(--s1);border:1px solid var(--border);border-radius:16px;padding:1.25rem;margin-bottom:1rem}
+    .log-row{display:flex;gap:0.6rem;align-items:stretch;margin-top:0.6rem}
+    .day-sel{flex:1;background:var(--s2);border:1px solid var(--border);border-radius:10px;padding:0.7rem 0.75rem;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:0.7rem;outline:none;cursor:pointer;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='7' viewBox='0 0 10 7'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23555' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 0.7rem center;padding-right:1.8rem;transition:border-color 0.2s}
+    .day-sel:focus{border-color:var(--lime)}
+    .w-inp{width:82px;background:var(--s2);border:1px solid var(--border);border-radius:10px;padding:0.7rem 0.5rem;color:var(--lime);font-family:'Bebas Neue',sans-serif;font-size:1.5rem;text-align:center;outline:none;transition:border-color 0.2s}
+    .w-inp:focus{border-color:var(--lime)}
+    .w-inp::placeholder{color:var(--text3)}
+    .btn-w{background:var(--lime);color:#000;border:none;border-radius:10px;padding:0.7rem 0.85rem;font-family:'Inter',sans-serif;font-weight:600;font-size:0.75rem;cursor:pointer;white-space:nowrap;transition:opacity 0.15s}
+    .btn-w:active{opacity:0.8}
+    .btn-w:disabled{opacity:0.3;cursor:not-allowed}
 
-    .btn-primary {
-      width: 100%;
-      background: var(--accent);
-      color: #000;
-      border: none;
-      border-radius: 12px;
-      padding: 1rem;
-      font-family: 'Syne', sans-serif;
-      font-weight: 700;
-      font-size: 0.95rem;
-      letter-spacing: 0.05em;
-      cursor: pointer;
-      transition: opacity 0.15s, transform 0.1s;
-    }
-    .btn-primary:active { opacity: 0.85; transform: scale(0.98); }
+    .hist-item{display:flex;align-items:center;justify-content:space-between;padding:0.85rem 1rem;border-bottom:1px solid var(--border);animation:fadeUp 0.25s ease both}
+    .hist-item:last-child{border-bottom:none}
+    .hist-date{font-family:'JetBrains Mono',monospace;font-size:0.65rem;color:var(--text2)}
+    .hist-week{font-family:'JetBrains Mono',monospace;font-size:0.5rem;color:var(--text3);margin-top:0.1rem}
+    .hist-right{display:flex;align-items:center;gap:0.5rem}
+    .hist-val{font-family:'Bebas Neue',sans-serif;font-size:1.4rem;color:var(--lime);letter-spacing:0.03em}
+    .hdiff{font-family:'JetBrains Mono',monospace;font-size:0.55rem;padding:0.15rem 0.4rem;border-radius:5px}
+    .dup{background:var(--red-dim);color:var(--red)}
+    .ddn{background:var(--lime-dim);color:var(--lime)}
+    .deq{background:var(--s3);color:var(--text3)}
 
-    .auth-error {
-      color: var(--danger);
-      font-family: 'DM Mono', monospace;
-      font-size: 0.7rem;
-      margin-top: 0.75rem;
-      text-align: center;
-      display: none;
-    }
+    /* DIET */
+    .tog-row{display:flex;gap:0.5rem;margin-bottom:1rem}
+    .tog-btn{flex:1;padding:0.65rem;background:var(--s1);border:1px solid var(--border);border-radius:10px;color:var(--text3);font-family:'Inter',sans-serif;font-weight:500;font-size:0.75rem;cursor:pointer;transition:all 0.2s}
+    .tog-btn.active{background:var(--lime);color:#000;border-color:var(--lime);font-weight:600}
 
-    /* ── MAIN APP ── */
-    #app { display: none; flex-direction: column; min-height: 100dvh; }
+    .meal-block{margin-bottom:0.75rem}
+    .meal-hdr{display:flex;align-items:center;gap:0.6rem;padding:0.9rem 1rem;background:var(--s1);border:1px solid var(--border);border-radius:16px 16px 0 0;cursor:pointer;user-select:none}
+    .meal-hdr.closed{border-radius:16px}
+    .meal-ico{font-size:1.05rem}
+    .meal-ttl{font-weight:600;font-size:0.88rem;flex:1}
+    .meal-chev{font-size:0.7rem;color:var(--text3);transition:transform 0.22s}
+    .meal-hdr.closed .meal-chev{transform:rotate(-90deg)}
+    .meal-body{background:var(--s1);border:1px solid var(--border);border-top:none;border-radius:0 0 16px 16px;overflow:hidden}
 
-    /* Header */
-    .header {
-      padding: calc(var(--safe-top) + 1rem) 1.5rem 1rem;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      border-bottom: 1px solid var(--border);
-      position: sticky;
-      top: 0;
-      background: rgba(10,10,10,0.85);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      z-index: 10;
-    }
+    .opt-tabs{display:flex;overflow-x:auto;scrollbar-width:none;border-bottom:1px solid var(--border);padding:0 0.75rem;gap:0}
+    .opt-tabs::-webkit-scrollbar{display:none}
+    .opt-tab{padding:0.55rem 0.8rem;font-family:'JetBrains Mono',monospace;font-size:0.58rem;color:var(--text3);cursor:pointer;white-space:nowrap;border-bottom:2px solid transparent;transition:all 0.2s;background:none;border-left:none;border-right:none;border-top:none}
+    .opt-tab.active{color:var(--lime);border-bottom-color:var(--lime)}
+    .opt-panel{display:none;padding:0.25rem 0}
+    .opt-panel.active{display:block}
 
-    .header-logo { font-size: 1.4rem; font-weight: 800; letter-spacing: -0.04em; }
-    .header-logo span { color: var(--accent); }
+    .food-row{display:flex;align-items:center;justify-content:space-between;padding:0.6rem 1rem;border-bottom:1px solid rgba(255,255,255,0.03)}
+    .food-row:last-child{border-bottom:none}
+    .food-name{font-size:0.82rem;color:var(--text)}
+    .food-r{display:flex;align-items:center;gap:0.45rem}
+    .mtag{font-family:'JetBrains Mono',monospace;font-size:0.55rem;padding:0.15rem 0.45rem;border-radius:5px}
+    .mpr{background:rgba(60,251,203,0.1);color:var(--teal)}
+    .mhc{background:var(--lime-dim);color:var(--lime)}
+    .mgr{background:rgba(255,200,60,0.1);color:#ffc83c}
+    .food-qty{font-family:'JetBrains Mono',monospace;font-size:0.65rem;color:var(--text2)}
 
-    .header-date {
-      font-family: 'DM Mono', monospace;
-      font-size: 0.65rem;
-      color: var(--muted);
-      letter-spacing: 0.08em;
-      text-align: right;
-    }
+    /* TRAINING */
+    .sess-block{margin-bottom:0.75rem}
+    .sess-hdr{display:flex;align-items:center;padding:0.9rem 1rem;background:var(--s1);border:1px solid var(--border);border-radius:16px 16px 0 0;cursor:pointer;user-select:none;gap:0.5rem}
+    .sess-hdr.closed{border-radius:16px}
+    .sess-num{font-family:'Bebas Neue',sans-serif;font-size:1.1rem;color:var(--lime);letter-spacing:0.04em}
+    .sess-name{font-weight:600;font-size:0.82rem;flex:1;color:var(--text)}
+    .sess-tag{font-family:'JetBrains Mono',monospace;font-size:0.5rem;color:var(--text3);background:var(--s3);padding:0.2rem 0.45rem;border-radius:5px}
+    .sess-chev{font-size:0.7rem;color:var(--text3);transition:transform 0.22s;margin-left:0.25rem}
+    .sess-hdr.closed .sess-chev{transform:rotate(-90deg)}
+    .sess-body{background:var(--s1);border:1px solid var(--border);border-top:none;border-radius:0 0 16px 16px;overflow:hidden}
 
-    /* Nav */
-    .nav {
-      display: flex;
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      overflow-x: auto;
-      scrollbar-width: none;
-    }
-    .nav::-webkit-scrollbar { display: none; }
+    .prep-sec{padding:0.75rem 1rem;background:rgba(255,255,255,0.02);border-bottom:1px solid var(--border)}
+    .prep-lbl{font-family:'JetBrains Mono',monospace;font-size:0.5rem;color:var(--text3);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:0.5rem}
+    .prep-item{font-size:0.75rem;color:var(--text2);padding:0.2rem 0;display:flex;justify-content:space-between}
 
-    .nav-btn {
-      flex: 1;
-      min-width: 80px;
-      padding: 0.85rem 0.5rem;
-      background: none;
-      border: none;
-      color: var(--muted);
-      font-family: 'Syne', sans-serif;
-      font-size: 0.75rem;
-      font-weight: 600;
-      letter-spacing: 0.05em;
-      cursor: pointer;
-      text-transform: uppercase;
-      border-bottom: 2px solid transparent;
-      transition: all 0.2s;
-      white-space: nowrap;
-    }
-    .nav-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+    .ex-row{padding:0.9rem 1rem;border-bottom:1px solid var(--border)}
+    .ex-row:last-child{border-bottom:none}
+    .ex-top{display:flex;align-items:flex-start;gap:0.55rem;margin-bottom:0.45rem}
+    .ex-ord{font-family:'Bebas Neue',sans-serif;font-size:1rem;color:var(--lime);min-width:16px;letter-spacing:0.04em}
+    .ex-name{font-weight:500;font-size:0.83rem;line-height:1.35;flex:1}
+    .ex-pills{display:flex;flex-wrap:wrap;gap:0.3rem;margin-left:22px}
+    .epill{font-family:'JetBrains Mono',monospace;font-size:0.55rem;padding:0.18rem 0.45rem;border-radius:5px}
+    .erep{background:var(--lime-dim);color:var(--lime)}
+    .eser{background:var(--teal-dim);color:var(--teal)}
+    .erir{background:var(--s3);color:var(--text3)}
+    .ex-vid{display:inline-flex;align-items:center;gap:0.25rem;font-family:'JetBrains Mono',monospace;font-size:0.55rem;color:var(--lime);text-decoration:none;margin-left:22px;margin-top:0.35rem;opacity:0.65;transition:opacity 0.15s}
+    .ex-vid:hover{opacity:1}
 
-    /* Content */
-    .content {
-      flex: 1;
-      padding: 1.5rem;
-      padding-bottom: calc(var(--safe-bottom) + 1.5rem);
-      overflow-y: auto;
-    }
+    /* SETTINGS */
+    .set-row{padding:1rem;border-bottom:1px solid var(--border)}
+    .set-row:last-child{border-bottom:none}
+    .set-inp{width:100%;background:var(--s2);border:1px solid var(--border);border-radius:10px;padding:0.7rem 0.85rem;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:0.72rem;outline:none;margin-top:0.4rem;transition:border-color 0.2s}
+    .set-inp:focus{border-color:var(--lime)}
+    .btn-set{width:100%;background:var(--lime);color:#000;border:none;border-radius:10px;padding:0.9rem;font-family:'Inter',sans-serif;font-weight:600;font-size:0.85rem;cursor:pointer;margin-bottom:0.6rem;transition:opacity 0.15s}
+    .btn-set:active{opacity:0.8}
+    .btn-out{width:100%;background:transparent;color:var(--red);border:1px solid rgba(255,68,68,0.25);border-radius:10px;padding:0.9rem;font-family:'Inter',sans-serif;font-weight:500;font-size:0.85rem;cursor:pointer;transition:background 0.2s}
+    .btn-out:active{background:var(--red-dim)}
+    .set-foot{font-family:'JetBrains Mono',monospace;font-size:0.55rem;color:var(--text3);text-align:center;margin-top:1.25rem;line-height:1.8}
+    .dot{display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--lime);margin-right:0.3rem;vertical-align:middle;animation:pulse 2s ease infinite}
 
-    .tab { display: none; }
-    .tab.active { display: block; }
+    /* STATES */
+    .empty-st{padding:3rem 1.25rem;text-align:center}
+    .empty-ico{font-size:2rem;margin-bottom:0.6rem}
+    .empty-t{font-weight:600;font-size:0.88rem;margin-bottom:0.3rem}
+    .empty-d{font-family:'JetBrains Mono',monospace;font-size:0.62rem;color:var(--text3);line-height:1.65}
+    .loading{padding:2.5rem;text-align:center;font-family:'JetBrains Mono',monospace;font-size:0.62rem;color:var(--text3)}
+    .spin{display:inline-block;width:13px;height:13px;border:1.5px solid var(--border);border-top-color:var(--lime);border-radius:50%;animation:spin 0.7s linear infinite;vertical-align:middle;margin-right:0.4rem}
 
-    /* Sections */
-    .section-title {
-      font-family: 'DM Mono', monospace;
-      font-size: 0.6rem;
-      letter-spacing: 0.18em;
-      color: var(--muted);
-      text-transform: uppercase;
-      margin-bottom: 1rem;
-    }
+    .toast{position:fixed;bottom:calc(var(--safe-b) + 1rem);left:50%;transform:translateX(-50%) translateY(80px);background:var(--lime);color:#000;font-family:'Inter',sans-serif;font-weight:600;font-size:0.78rem;padding:0.6rem 1.2rem;border-radius:100px;z-index:200;transition:transform 0.3s cubic-bezier(0.34,1.56,0.64,1);white-space:nowrap}
+    .toast.show{transform:translateX(-50%) translateY(0)}
+    .toast.err{background:var(--red);color:#fff}
 
-    /* Weight tab */
-    .weight-hero {
-      background: linear-gradient(135deg, #1a2a0a, #0d1a05);
-      border: 1px solid #2a4a0a;
-      border-radius: 20px;
-      padding: 2rem;
-      text-align: center;
-      margin-bottom: 1.5rem;
-    }
-
-    .weight-current-label {
-      font-family: 'DM Mono', monospace;
-      font-size: 0.6rem;
-      letter-spacing: 0.15em;
-      color: var(--muted);
-      text-transform: uppercase;
-      margin-bottom: 0.5rem;
-    }
-
-    .weight-current-val {
-      font-size: 4rem;
-      font-weight: 800;
-      letter-spacing: -0.05em;
-      color: var(--accent);
-      line-height: 1;
-    }
-
-    .weight-current-unit {
-      font-family: 'DM Mono', monospace;
-      font-size: 1rem;
-      color: var(--muted);
-      margin-bottom: 1rem;
-    }
-
-    .weight-trend {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.3rem;
-      font-family: 'DM Mono', monospace;
-      font-size: 0.75rem;
-      padding: 0.35rem 0.75rem;
-      border-radius: 100px;
-      background: rgba(255,255,255,0.05);
-    }
-
-    .weight-form {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 1.5rem;
-      margin-bottom: 1.5rem;
-    }
-
-    .weight-input-row {
-      display: flex;
-      gap: 0.75rem;
-      align-items: center;
-    }
-
-    .weight-input {
-      flex: 1;
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 1rem;
-      color: var(--text);
-      font-family: 'DM Mono', monospace;
-      font-size: 1.5rem;
-      font-weight: 400;
-      text-align: center;
-      outline: none;
-      transition: border-color 0.2s;
-    }
-    .weight-input:focus { border-color: var(--accent); }
-    .weight-input::placeholder { color: var(--muted); }
-
-    .btn-log {
-      background: var(--accent);
-      color: #000;
-      border: none;
-      border-radius: 12px;
-      padding: 1rem 1.25rem;
-      font-family: 'Syne', sans-serif;
-      font-weight: 700;
-      font-size: 0.85rem;
-      cursor: pointer;
-      transition: opacity 0.15s, transform 0.1s;
-      white-space: nowrap;
-    }
-    .btn-log:active { opacity: 0.85; transform: scale(0.97); }
-    .btn-log:disabled { opacity: 0.4; cursor: not-allowed; }
-
-    /* History */
-    .history-list { display: flex; flex-direction: column; gap: 0.5rem; }
-
-    .history-item {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 0.9rem 1.1rem;
-      animation: fadeIn 0.3s ease;
-    }
-
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
-
-    .history-date {
-      font-family: 'DM Mono', monospace;
-      font-size: 0.7rem;
-      color: var(--muted);
-    }
-    .history-weight {
-      font-weight: 700;
-      font-size: 1rem;
-      color: var(--accent);
-    }
-    .history-diff {
-      font-family: 'DM Mono', monospace;
-      font-size: 0.65rem;
-      padding: 0.2rem 0.5rem;
-      border-radius: 6px;
-    }
-    .diff-up { background: rgba(255,77,77,0.12); color: var(--danger); }
-    .diff-down { background: rgba(200,245,66,0.12); color: var(--accent); }
-    .diff-same { background: rgba(255,255,255,0.05); color: var(--muted); }
-
-    /* Diet / Training tabs */
-    .sheet-content {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      overflow: hidden;
-    }
-
-    .sheet-loading {
-      padding: 3rem;
-      text-align: center;
-      font-family: 'DM Mono', monospace;
-      font-size: 0.75rem;
-      color: var(--muted);
-    }
-
-    .meal-card {
-      border-bottom: 1px solid var(--border);
-      padding: 1.1rem 1.25rem;
-      animation: fadeIn 0.3s ease;
-    }
-    .meal-card:last-child { border-bottom: none; }
-
-    .meal-name {
-      font-weight: 700;
-      font-size: 0.95rem;
-      margin-bottom: 0.3rem;
-    }
-
-    .meal-desc {
-      font-family: 'DM Mono', monospace;
-      font-size: 0.7rem;
-      color: var(--muted);
-      line-height: 1.5;
-    }
-
-    .meal-macros {
-      display: flex;
-      gap: 0.5rem;
-      margin-top: 0.6rem;
-      flex-wrap: wrap;
-    }
-
-    .macro-pill {
-      font-family: 'DM Mono', monospace;
-      font-size: 0.6rem;
-      padding: 0.2rem 0.55rem;
-      border-radius: 6px;
-      letter-spacing: 0.05em;
-    }
-    .macro-p { background: rgba(66,245,179,0.1); color: var(--accent2); }
-    .macro-c { background: rgba(200,245,66,0.1); color: var(--accent); }
-    .macro-f { background: rgba(255,200,66,0.1); color: #ffc842; }
-    .macro-k { background: rgba(255,255,255,0.05); color: var(--muted); }
-
-    /* Training */
-    .exercise-card {
-      border-bottom: 1px solid var(--border);
-      padding: 1.1rem 1.25rem;
-      animation: fadeIn 0.3s ease;
-    }
-    .exercise-card:last-child { border-bottom: none; }
-
-    .exercise-name { font-weight: 700; font-size: 0.95rem; margin-bottom: 0.3rem; }
-    .exercise-sets {
-      display: flex;
-      gap: 0.4rem;
-      flex-wrap: wrap;
-      margin-top: 0.5rem;
-    }
-    .set-pill {
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 0.25rem 0.6rem;
-      font-family: 'DM Mono', monospace;
-      font-size: 0.65rem;
-      color: var(--muted);
-    }
-
-    /* Toast */
-    .toast {
-      position: fixed;
-      bottom: calc(var(--safe-bottom) + 1.5rem);
-      left: 50%;
-      transform: translateX(-50%) translateY(100px);
-      background: var(--accent);
-      color: #000;
-      font-family: 'Syne', sans-serif;
-      font-weight: 700;
-      font-size: 0.85rem;
-      padding: 0.75rem 1.5rem;
-      border-radius: 100px;
-      z-index: 100;
-      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-      white-space: nowrap;
-    }
-    .toast.show { transform: translateX(-50%) translateY(0); }
-    .toast.error { background: var(--danger); color: #fff; }
-
-    /* Settings */
-    .settings-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      overflow: hidden;
-      margin-bottom: 1rem;
-    }
-    .settings-row {
-      display: flex;
-      flex-direction: column;
-      padding: 1rem 1.25rem;
-      border-bottom: 1px solid var(--border);
-      gap: 0.4rem;
-    }
-    .settings-row:last-child { border-bottom: none; }
-    .settings-label {
-      font-family: 'DM Mono', monospace;
-      font-size: 0.6rem;
-      letter-spacing: 0.12em;
-      color: var(--muted);
-      text-transform: uppercase;
-    }
-    .settings-input {
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 0.7rem 0.9rem;
-      color: var(--text);
-      font-family: 'DM Mono', monospace;
-      font-size: 0.8rem;
-      outline: none;
-      width: 100%;
-      transition: border-color 0.2s;
-    }
-    .settings-input:focus { border-color: var(--accent); }
-
-    .btn-save {
-      width: 100%;
-      background: var(--accent);
-      color: #000;
-      border: none;
-      border-radius: 12px;
-      padding: 1rem;
-      font-family: 'Syne', sans-serif;
-      font-weight: 700;
-      font-size: 0.95rem;
-      cursor: pointer;
-      transition: opacity 0.15s;
-    }
-    .btn-save:active { opacity: 0.8; }
-
-    .btn-logout {
-      width: 100%;
-      background: transparent;
-      color: var(--danger);
-      border: 1px solid rgba(255,77,77,0.3);
-      border-radius: 12px;
-      padding: 1rem;
-      font-family: 'Syne', sans-serif;
-      font-weight: 600;
-      font-size: 0.9rem;
-      cursor: pointer;
-      margin-top: 0.75rem;
-      transition: background 0.2s;
-    }
-    .btn-logout:active { background: rgba(255,77,77,0.1); }
-
-    .empty-state {
-      padding: 3rem 1.5rem;
-      text-align: center;
-    }
-    .empty-icon { font-size: 2.5rem; margin-bottom: 0.75rem; }
-    .empty-title { font-weight: 700; margin-bottom: 0.4rem; }
-    .empty-desc { font-family: 'DM Mono', monospace; font-size: 0.7rem; color: var(--muted); line-height: 1.6; }
-
-    .spinner {
-      display: inline-block;
-      width: 16px; height: 16px;
-      border: 2px solid var(--border);
-      border-top-color: var(--accent);
-      border-radius: 50%;
-      animation: spin 0.7s linear infinite;
-      vertical-align: middle;
-      margin-right: 0.4rem;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    .status-dot {
-      display: inline-block;
-      width: 6px; height: 6px;
-      border-radius: 50%;
-      background: var(--accent);
-      margin-right: 0.3rem;
-      animation: pulse 2s ease infinite;
-    }
-    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
-
-    .diet-toggle {
-      flex: 1;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 0.6rem;
-      color: var(--muted);
-      font-family: 'Syne', sans-serif;
-      font-size: 0.75rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .diet-toggle.active { background: var(--accent); color: #000; border-color: var(--accent); }
-
-    .session-header {
-      background: var(--surface2);
-      border-bottom: 1px solid var(--border);
-      padding: 0.7rem 1.25rem;
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-    }
-    .session-label {
-      font-weight: 700;
-      font-size: 0.85rem;
-    }
-    .session-type {
-      font-family: 'DM Mono', monospace;
-      font-size: 0.6rem;
-      color: var(--accent2);
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-    }
-    .exercise-card { border-bottom: 1px solid var(--border); padding: 1rem 1.25rem; }
-    .exercise-card:last-child { border-bottom: none; }
-    .exercise-name { font-weight: 700; font-size: 0.9rem; margin-bottom: 0.3rem; }
-    .exercise-prep { font-weight: 600; font-size: 0.8rem; color: var(--muted); margin-bottom: 0.3rem; }
-    .exercise-detail {
-      font-family: 'DM Mono', monospace;
-      font-size: 0.65rem;
-      color: var(--muted);
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.4rem;
-      margin-top: 0.4rem;
-    }
-    .ex-tag {
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 0.2rem 0.5rem;
-    }
-    .ex-tag.reps { color: var(--accent); border-color: rgba(200,245,66,0.3); }
-    .ex-tag.series { color: var(--accent2); border-color: rgba(66,245,179,0.3); }
-    .ex-video {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.25rem;
-      margin-top: 0.4rem;
-      font-family: 'DM Mono', monospace;
-      font-size: 0.6rem;
-      color: var(--accent);
-      text-decoration: none;
-    }
-
-    .option-block {
-      background: var(--surface2);
-      border-radius: 10px;
-      margin: 0.75rem 1.25rem;
-      overflow: hidden;
-    }
-    .option-label {
-      font-family: 'DM Mono', monospace;
-      font-size: 0.6rem;
-      letter-spacing: 0.1em;
-      color: var(--muted);
-      text-transform: uppercase;
-      padding: 0.5rem 0.75rem;
-      border-bottom: 1px solid var(--border);
-    }
-    .food-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0.5rem 0.75rem;
-      border-bottom: 1px solid rgba(255,255,255,0.04);
-    }
-    .food-row:last-child { border-bottom: none; }
-    .food-name { font-size: 0.8rem; }
-    .food-right { display: flex; gap: 0.4rem; align-items: center; }
-    .food-macro {
-      font-family: 'DM Mono', monospace;
-      font-size: 0.6rem;
-      padding: 0.15rem 0.45rem;
-      border-radius: 5px;
-      background: rgba(200,245,66,0.08);
-      color: var(--accent);
-    }
-    .food-qty {
-      font-family: 'DM Mono', monospace;
-      font-size: 0.65rem;
-      color: var(--muted);
-    }
-    .meal-section-header {
-      padding: 1rem 1.25rem 0.25rem;
-      font-weight: 700;
-      font-size: 0.85rem;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
+    @keyframes fadeUp{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
   </style>
 </head>
 <body>
 
-<!-- AUTH -->
-<div id="auth-screen">
-  <div class="auth-logo">Fit<span>Board</span></div>
-  <div class="auth-sub">Tu entrenamiento, limpio</div>
-  <div class="auth-card">
-    <label class="auth-label">Contraseña</label>
-    <input type="password" class="auth-input" id="pw-input" placeholder="••••••••" autocomplete="current-password" />
-    <button class="btn-primary" id="login-btn">Entrar</button>
-    <div class="auth-error" id="auth-error">Contraseña incorrecta</div>
+<div id="auth">
+  <div class="auth-title">FIT<em>BOARD</em></div>
+  <div class="auth-sub">Aitor Gálvez · Programa</div>
+  <div class="auth-box">
+    <label class="field-label">Contraseña</label>
+    <input type="password" class="field-input" id="pw" placeholder="••••••••" autocomplete="current-password"/>
+    <button class="btn-enter" id="loginBtn">Entrar</button>
+    <div class="auth-err" id="authErr">Contraseña incorrecta</div>
   </div>
 </div>
 
-<!-- APP -->
 <div id="app">
-  <div class="header">
-    <div class="header-logo">Fit<span>Board</span></div>
-    <div class="header-date" id="header-date"></div>
+  <div class="hdr">
+    <div class="hdr-logo">FIT<em>BOARD</em></div>
+    <div class="hdr-day" id="hdrDay"></div>
   </div>
   <nav class="nav">
-    <button class="nav-btn active" data-tab="weight">⚖️ Peso</button>
-    <button class="nav-btn" data-tab="diet">🥗 Dieta</button>
-    <button class="nav-btn" data-tab="training">💪 Entreno</button>
-    <button class="nav-btn" data-tab="settings">⚙️ Config</button>
+    <button class="nav-btn active" data-tab="weight"><span class="ico">⚖️</span>Peso</button>
+    <button class="nav-btn" data-tab="diet"><span class="ico">🥗</span>Dieta</button>
+    <button class="nav-btn" data-tab="training"><span class="ico">💪</span>Entreno</button>
+    <button class="nav-btn" data-tab="settings"><span class="ico">⚙️</span>Config</button>
   </nav>
   <div class="content">
 
-    <!-- WEIGHT TAB -->
+    <!-- WEIGHT -->
     <div class="tab active" id="tab-weight">
-      <div class="weight-hero">
-        <div class="weight-current-label">Último registro</div>
-        <div class="weight-current-val" id="last-weight">—</div>
-        <div class="weight-current-unit">kg</div>
-        <div class="weight-trend" id="weight-trend">Sin datos previos</div>
+      <div class="stat-hero">
+        <div class="stat-lbl">Último peso registrado</div>
+        <div class="stat-val" id="lastVal">—</div>
+        <div class="stat-unit">kilogramos</div>
+        <div class="stat-badge" id="trendBadge">Sin datos previos</div>
       </div>
-
-      <div class="weight-form">
-        <div class="section-title">Registrar peso</div>
-        <div style="margin-bottom:0.75rem">
-          <label class="auth-label" style="margin-bottom:0.4rem;display:block">Día</label>
-          <select id="weight-day" class="weight-input" style="font-size:0.8rem;padding:0.75rem 1rem;text-align:left;cursor:pointer">
-            <option value="">Cargando días...</option>
-          </select>
+      <div class="chart-wrap">
+        <div class="chart-lbl">Evolución · todos los registros</div>
+        <canvas id="wChart"></canvas>
+        <div id="chartMsg" style="display:none;text-align:center;font-family:'JetBrains Mono',monospace;font-size:0.62rem;color:var(--text3);padding:0.75rem 0">Registra al menos 2 pesos para ver la gráfica</div>
+      </div>
+      <div class="log-card">
+        <span class="lbl">Registrar / editar peso</span>
+        <div class="log-row">
+          <select id="daySelect" class="day-sel"><option value="">Cargando...</option></select>
+          <input type="number" step="0.1" min="30" max="300" class="w-inp" id="wInp" placeholder="75" inputmode="decimal"/>
+          <button class="btn-w" id="saveWBtn">Guardar</button>
         </div>
-        <div class="weight-input-row">
-          <input type="number" step="0.1" min="30" max="300" class="weight-input" id="weight-val" placeholder="75.5" inputmode="decimal" />
-          <button class="btn-log" id="log-btn">Guardar</button>
-        </div>
       </div>
-
-      <div class="section-title">Historial</div>
-      <div class="history-list" id="history-list">
-        <div class="sheet-loading"><span class="spinner"></span>Cargando...</div>
-      </div>
+      <span class="lbl">Historial</span>
+      <div class="card" id="histList"><div class="loading"><span class="spin"></span>Cargando...</div></div>
     </div>
 
-    <!-- DIET TAB -->
+    <!-- DIET -->
     <div class="tab" id="tab-diet">
-      <div style="display:flex;gap:0.5rem;margin-bottom:1.25rem">
-        <button class="diet-toggle active" data-type="entreno">🏋️ Entreno</button>
-        <button class="diet-toggle" data-type="descanso">💤 Descanso</button>
+      <div class="tog-row">
+        <button class="tog-btn active" data-type="entreno">🏋️ Día entreno</button>
+        <button class="tog-btn" data-type="descanso">💤 Día descanso</button>
       </div>
-      <div class="sheet-content" id="diet-content">
-        <div class="sheet-loading"><span class="spinner"></span>Cargando dieta...</div>
-      </div>
+      <div id="dietContent"><div class="loading"><span class="spin"></span>Cargando dieta...</div></div>
     </div>
 
-    <!-- TRAINING TAB -->
+    <!-- TRAINING -->
     <div class="tab" id="tab-training">
-      <div class="section-title" style="margin-bottom:1rem">Plan de entrenamiento</div>
-      <div class="sheet-content" id="training-content">
-        <div class="sheet-loading"><span class="spinner"></span>Cargando entreno...</div>
-      </div>
+      <div id="trainContent"><div class="loading"><span class="spin"></span>Cargando entreno...</div></div>
     </div>
 
-    <!-- SETTINGS TAB -->
+    <!-- SETTINGS -->
     <div class="tab" id="tab-settings">
-      <div class="section-title" style="margin-bottom:1rem">Configuración</div>
-      <div class="settings-card">
-        <div class="settings-row">
-          <label class="settings-label">URL del Google Apps Script</label>
-          <input type="url" class="settings-input" id="script-url" placeholder="https://script.google.com/macros/s/..." />
+      <div class="card" style="margin-bottom:1rem">
+        <div class="set-row">
+          <label class="field-label">URL Google Apps Script</label>
+          <input type="url" class="set-inp" id="setUrl" placeholder="https://script.google.com/macros/s/..."/>
         </div>
-        <div class="settings-row">
-          <label class="settings-label">Contraseña de acceso</label>
-          <input type="password" class="settings-input" id="new-password" placeholder="Nueva contraseña" />
+        <div class="set-row">
+          <label class="field-label">Nueva contraseña (opcional)</label>
+          <input type="password" class="set-inp" id="setPw" placeholder="Dejar vacío para mantener"/>
         </div>
       </div>
-      <button class="btn-save" id="save-settings">Guardar configuración</button>
-      <button class="btn-logout" id="logout-btn">Cerrar sesión</button>
-      <p style="font-family:'DM Mono',monospace;font-size:0.6rem;color:var(--muted);text-align:center;margin-top:1.5rem;line-height:1.7">
-        <span class="status-dot"></span>FitBoard v1.0 — Datos en tu Google Sheet<br>
-        Añade a pantalla de inicio para experiencia nativa
-      </p>
+      <button class="btn-set" id="saveSetBtn">Guardar configuración</button>
+      <button class="btn-out" id="logoutBtn">Cerrar sesión</button>
+      <div class="set-foot"><span class="dot"></span>FitBoard v2.0 · Google Sheets sync<br>Añade a pantalla de inicio para app nativa</div>
     </div>
 
   </div>
@@ -744,325 +271,289 @@
 <div class="toast" id="toast"></div>
 
 <script>
-// ─── CONFIG ───
-const DEFAULT_PASSWORD = 'fitboard2024'; // Cambia esto
-const STORAGE_KEY_AUTH = 'fb_auth';
-const STORAGE_KEY_SCRIPT = 'fb_script_url';
-const STORAGE_KEY_PW = 'fb_password';
+const PW_DEF='fitboard2024', K_AUTH='fb_auth', K_URL='fb_url', K_PW='fb_pw';
+const MEAL_ICO={Desayuno:'☀️',Comida:'🍽️','Merienda / Recena':'🕓',Cena:'🌙'};
+let scriptUrl=localStorage.getItem(K_URL)||'';
+let appPw=localStorage.getItem(K_PW)||PW_DEF;
+let weights=[];
 
-// ─── STATE ───
-let scriptUrl = localStorage.getItem(STORAGE_KEY_SCRIPT) || '';
-let appPassword = localStorage.getItem(STORAGE_KEY_PW) || DEFAULT_PASSWORD;
-let weightHistory = [];
-
-// ─── AUTH ───
-const authScreen = document.getElementById('auth-screen');
-const app = document.getElementById('app');
-const pwInput = document.getElementById('pw-input');
-const loginBtn = document.getElementById('login-btn');
-const authError = document.getElementById('auth-error');
-
-function checkAuth() {
-  const session = sessionStorage.getItem(STORAGE_KEY_AUTH);
-  if (session === 'ok') showApp();
-}
-
-loginBtn.addEventListener('click', () => {
-  if (pwInput.value === appPassword) {
-    sessionStorage.setItem(STORAGE_KEY_AUTH, 'ok');
-    authError.style.display = 'none';
-    showApp();
-  } else {
-    authError.style.display = 'block';
-    pwInput.value = '';
-    pwInput.focus();
-  }
+// AUTH
+const authEl=document.getElementById('auth'), appEl=document.getElementById('app');
+const pwEl=document.getElementById('pw'), loginBtn=document.getElementById('loginBtn');
+function checkAuth(){if(sessionStorage.getItem(K_AUTH)==='ok')launch()}
+loginBtn.addEventListener('click',()=>{
+  if(pwEl.value===appPw){sessionStorage.setItem(K_AUTH,'ok');document.getElementById('authErr').style.display='none';launch()}
+  else{document.getElementById('authErr').style.display='block';pwEl.value='';pwEl.focus()}
 });
-pwInput.addEventListener('keydown', e => { if (e.key === 'Enter') loginBtn.click(); });
+pwEl.addEventListener('keydown',e=>{if(e.key==='Enter')loginBtn.click()});
 
-function showApp() {
-  authScreen.style.display = 'none';
-  app.style.display = 'flex';
-  initApp();
+function launch(){
+  authEl.style.display='none';appEl.style.display='flex';
+  document.getElementById('hdrDay').textContent=new Date().toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'short'}).toUpperCase();
+  document.getElementById('setUrl').value=scriptUrl;
+  loadWeights();loadDiet('entreno');loadTraining();
 }
 
-// ─── INIT ───
-function initApp() {
-  // Date header
-  const now = new Date();
-  document.getElementById('header-date').innerHTML =
-    now.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'short' }).toUpperCase() +
-    '<br>' + now.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
-
-  // Load data
-  loadWeights();
-  loadDiet('entreno');
-  loadTraining();
-
-  // Settings prefill
-  document.getElementById('script-url').value = scriptUrl;
-}
-
-// ─── NAV ───
-document.querySelectorAll('.nav-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    btn.classList.add('active');
-    document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+// NAV
+document.querySelectorAll('.nav-btn').forEach(b=>{
+  b.addEventListener('click',()=>{
+    document.querySelectorAll('.nav-btn').forEach(x=>x.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    document.getElementById('tab-'+b.dataset.tab).classList.add('active');
   });
 });
 
-// ─── API CALL ───
-async function callScript(action, data = {}) {
-  if (!scriptUrl) throw new Error('NO_URL');
-  const url = new URL(scriptUrl);
-  url.searchParams.set('action', action);
-  Object.entries(data).forEach(([k, v]) => url.searchParams.set(k, v));
-  const res = await fetch(url.toString());
-  if (!res.ok) throw new Error('HTTP ' + res.status);
-  return res.json();
+// API
+async function api(action,params={}){
+  if(!scriptUrl)throw new Error('NO_URL');
+  const u=new URL(scriptUrl);
+  u.searchParams.set('action',action);
+  Object.entries(params).forEach(([k,v])=>u.searchParams.set(k,v));
+  const r=await fetch(u.toString());
+  if(!r.ok)throw new Error('HTTP '+r.status);
+  return r.json();
 }
 
-// ─── WEIGHT ───
-async function loadWeights() {
-  const histEl = document.getElementById('history-list');
-  try {
-    const data = await callScript('getWeights');
-    weightHistory = data.weights || [];
-    renderWeightHistory();
-  } catch (e) {
-    if (e.message === 'NO_URL') {
-      histEl.innerHTML = renderEmptyState('⚙️', 'Configura el script', 'Ve a Config e introduce la URL de tu Google Apps Script');
-    } else {
-      histEl.innerHTML = renderEmptyState('📡', 'Sin conexión', 'Revisa la URL del script en Configuración');
-    }
-  }
+// WEIGHTS
+async function loadWeights(){
+  document.getElementById('histList').innerHTML='<div class="loading"><span class="spin"></span>Cargando...</div>';
+  try{const d=await api('getWeights');weights=d.weights||[];renderWeights()}
+  catch(e){document.getElementById('histList').innerHTML=emptyHtml('⚙️',e.message==='NO_URL'?'Sin configuración':'Sin conexión',e.message==='NO_URL'?'Ve a Config e introduce la URL del script':'Revisa la URL en Configuración')}
 }
 
-function renderWeightHistory() {
-  const histEl = document.getElementById('history-list');
-  const lastEl = document.getElementById('last-weight');
-  const trendEl = document.getElementById('weight-trend');
+function renderWeights(){
+  buildDaySelect(weights);
+  const w=weights.filter(x=>x.weight!=null);
 
-  populateDaySelector(weightHistory);
-
-  if (!weightHistory.length) {
-    histEl.innerHTML = renderEmptyState('⚖️', 'Sin registros', 'Introduce tu primer peso arriba');
-    return;
-  }
-
-  // Last weight
-  const last = weightHistory[weightHistory.length - 1];
-  lastEl.textContent = last.weight;
-
-  // Trend
-  if (weightHistory.length >= 2) {
-    const prev = weightHistory[weightHistory.length - 2];
-    const diff = (last.weight - prev.weight).toFixed(1);
-    const sign = diff > 0 ? '+' : '';
-    trendEl.innerHTML = `${sign}${diff} kg vs ayer`;
-    trendEl.style.color = diff > 0 ? 'var(--danger)' : diff < 0 ? 'var(--accent)' : 'var(--muted)';
-  } else {
-    trendEl.textContent = 'Primer registro';
-  }
-
-  // History list (reversed, newest first)
-  // Show only entries with weight in history list
-  const withWeight = weightHistory.filter(e => e.weight);
-  const reversed = [...withWeight].reverse();
-  histEl.innerHTML = reversed.length ? reversed.map((entry, i) => {
-    const prev = reversed[i + 1];
-    let diffHtml = '';
-    if (prev) {
-      const d = (entry.weight - prev.weight).toFixed(1);
-      const cls = d > 0 ? 'diff-up' : d < 0 ? 'diff-down' : 'diff-same';
-      const sign = d > 0 ? '+' : '';
-      diffHtml = `<span class="history-diff ${cls}">${sign}${d}</span>`;
+  if(w.length){
+    const last=w[w.length-1];
+    document.getElementById('lastVal').textContent=last.weight.toFixed(1);
+    if(w.length>=2){
+      const prev=w[w.length-2];
+      const d=(last.weight-prev.weight).toFixed(1);
+      const b=document.getElementById('trendBadge');
+      b.textContent=(d>0?'+':'')+d+' kg vs anterior';
+      b.className='stat-badge '+(d>0?'up':d<0?'down':'');
     }
-    return `<div class="history-item">
-      <div>
-        <div class="history-date">${entry.date}</div>
-      </div>
-      <div style="display:flex;align-items:center;gap:0.5rem">
-        ${diffHtml}
-        <span class="history-weight">${entry.weight} kg</span>
-      </div>
+  }
+
+  drawChart(w);
+
+  const histEl=document.getElementById('histList');
+  if(!w.length){histEl.innerHTML=emptyHtml('⚖️','Sin registros','Selecciona un día e introduce tu peso');return}
+  const rev=[...w].reverse();
+  histEl.innerHTML=rev.map((e,i)=>{
+    const prev=rev[i+1];
+    let dh='';
+    if(prev){const d=(e.weight-prev.weight).toFixed(1);const cls=d>0?'dup':d<0?'ddn':'deq';dh=`<span class="hdiff ${cls}">${d>0?'+':''}${d}</span>`}
+    return `<div class="hist-item" style="animation-delay:${i*0.025}s">
+      <div><div class="hist-date">${e.date}</div><div class="hist-week">${e.week||''}</div></div>
+      <div class="hist-right">${dh}<span class="hist-val">${e.weight.toFixed(1)}</span></div>
     </div>`;
-  }).join('') : renderEmptyState('⚖️', 'Sin registros', 'Selecciona un día arriba e introduce tu peso');
+  }).join('');
 }
 
-document.getElementById('log-btn').addEventListener('click', async () => {
-  const val = parseFloat(document.getElementById('weight-val').value);
-  const daySelect = document.getElementById('weight-day');
-  const selectedDay = daySelect.value;
+function buildDaySelect(ws){
+  const sel=document.getElementById('daySelect');
+  if(!ws||!ws.length){sel.innerHTML='<option value="">Sin días disponibles</option>';return}
+  const today=new Date().toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit',year:'numeric'});
+  const inList=ws.some(w=>w.date===today);
+  const opts=[...ws].reverse().map(w=>`<option value="${w.date}">${w.date}${w.weight!=null?' ✓ '+w.weight+'kg':''}</option>`);
+  if(!inList)opts.unshift(`<option value="${today}">Hoy · ${today}</option>`);
+  sel.innerHTML=opts.join('');
+}
 
-  if (!val || val < 30 || val > 300) { showToast('Introduce un peso válido', true); return; }
-  if (!selectedDay) { showToast('Selecciona un día', true); return; }
-
-  const btn = document.getElementById('log-btn');
-  btn.disabled = true;
-  btn.textContent = '...';
-  try {
-    await callScript('logWeightByDate', { date: selectedDay, weight: val });
-    document.getElementById('weight-val').value = '';
-    showToast('✓ Peso guardado');
-    loadWeights();
-  } catch (e) {
-    showToast(e.message === 'NO_URL' ? 'Configura el script primero' : 'Error al guardar', true);
-  } finally {
-    btn.disabled = false;
-    btn.textContent = 'Guardar';
-  }
+document.getElementById('saveWBtn').addEventListener('click',async()=>{
+  const val=parseFloat(document.getElementById('wInp').value);
+  const date=document.getElementById('daySelect').value;
+  if(!val||val<30||val>300){toast('Introduce un peso válido',true);return}
+  if(!date){toast('Selecciona un día',true);return}
+  const btn=document.getElementById('saveWBtn');
+  btn.disabled=true;btn.textContent='...';
+  try{await api('logWeightByDate',{date,weight:val});document.getElementById('wInp').value='';toast('✓ Peso guardado');loadWeights()}
+  catch(e){toast(e.message==='NO_URL'?'Configura el script primero':'Error al guardar',true)}
+  finally{btn.disabled=false;btn.textContent='Guardar'}
 });
 
-function populateDaySelector(weights) {
-  const sel = document.getElementById('weight-day');
-  if (!weights || !weights.length) { sel.innerHTML = '<option value="">Sin días disponibles</option>'; return; }
+// CHART (pure canvas, no lib)
+function drawChart(data){
+  const canvas=document.getElementById('wChart');
+  const msg=document.getElementById('chartMsg');
+  if(data.length<2){canvas.style.display='none';msg.style.display='block';return}
+  canvas.style.display='block';msg.style.display='none';
+  const dpr=window.devicePixelRatio||1;
+  const W=canvas.parentElement.clientWidth-40;
+  const H=150;
+  canvas.width=W*dpr;canvas.height=H*dpr;
+  canvas.style.width=W+'px';canvas.style.height=H+'px';
+  const ctx=canvas.getContext('2d');
+  ctx.scale(dpr,dpr);
+  const vals=data.map(d=>d.weight);
+  const labels=data.map(d=>d.date.substring(0,5));
+  const mn=Math.min(...vals)-0.5,mx=Math.max(...vals)+0.5;
+  const pad={t:8,r:8,b:28,l:34};
+  const gw=W-pad.l-pad.r,gh=H-pad.t-pad.b;
+  const xS=i=>pad.l+i*(gw/(data.length-1));
+  const yS=v=>pad.t+gh-(v-mn)/(mx-mn)*gh;
 
-  // Build options: all days that have a date (with or without weight already)
-  const options = weights.map(w => {
-    const hasWeight = w.weight ? true : false;
-    const label = w.date + (hasWeight ? ' — ' + w.weight + ' kg ✓' : ' — sin registro');
-    return `<option value="${w.date}" ${hasWeight ? 'style="color:var(--accent)"' : ''}>${label}</option>`;
+  // grid
+  ctx.strokeStyle='rgba(255,255,255,0.04)';ctx.lineWidth=1;
+  for(let i=0;i<=4;i++){const y=pad.t+i*(gh/4);ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(pad.l+gw,y);ctx.stroke()}
+
+  // y labels
+  ctx.fillStyle='#444';ctx.font=`${10*dpr/dpr}px JetBrains Mono,monospace`;ctx.textAlign='right';
+  for(let i=0;i<=4;i++){const v=mx-i*(mx-mn)/4;ctx.fillText(v.toFixed(1),pad.l-5,pad.t+i*(gh/4)+3.5)}
+
+  // x labels
+  ctx.textAlign='center';
+  const step=Math.max(1,Math.floor(data.length/5));
+  data.forEach((_,i)=>{if(i%step===0||i===data.length-1)ctx.fillText(labels[i],xS(i),H-8)});
+
+  // area
+  const grad=ctx.createLinearGradient(0,pad.t,0,pad.t+gh);
+  grad.addColorStop(0,'rgba(212,245,60,0.15)');grad.addColorStop(1,'rgba(212,245,60,0)');
+  ctx.beginPath();ctx.moveTo(xS(0),yS(vals[0]));
+  vals.forEach((v,i)=>{if(i>0)ctx.lineTo(xS(i),yS(v))});
+  ctx.lineTo(xS(vals.length-1),pad.t+gh);ctx.lineTo(xS(0),pad.t+gh);
+  ctx.closePath();ctx.fillStyle=grad;ctx.fill();
+
+  // line
+  ctx.beginPath();ctx.strokeStyle='#d4f53c';ctx.lineWidth=2;ctx.lineJoin='round';
+  vals.forEach((v,i)=>{i===0?ctx.moveTo(xS(i),yS(v)):ctx.lineTo(xS(i),yS(v))});ctx.stroke();
+
+  // dots
+  vals.forEach((v,i)=>{
+    ctx.beginPath();ctx.arc(xS(i),yS(v),i===vals.length-1?5:2.5,0,Math.PI*2);
+    ctx.fillStyle=i===vals.length-1?'#d4f53c':'rgba(212,245,60,0.45)';ctx.fill();
   });
-
-  // Add a "today" option at top if today is not already in list
-  const today = new Date().toLocaleDateString('es-ES', { day:'2-digit', month:'2-digit', year:'numeric' });
-  const todayExists = weights.some(w => w.date === today);
-  const todayOption = todayExists ? '' : `<option value="${today}">Hoy (${today})</option>`;
-
-  sel.innerHTML = todayOption + options.reverse().join(''); // newest first
 }
 
-// ─── DIET ───
-const MEAL_ICONS = { 'Desayuno': '☀️', 'Comida': '🍽️', 'Merienda / Recena': '🕒', 'Cena': '🌙' };
-
-async function loadDiet(type = 'entreno') {
-  const el = document.getElementById('diet-content');
-  el.innerHTML = '<div class="sheet-loading"><span class="spinner"></span>Cargando dieta...</div>';
-  try {
-    const data = await callScript('getDiet', { type });
-    const meals = data.meals || [];
-    if (!meals.length) { el.innerHTML = renderEmptyState('🥗', 'Sin datos de dieta', 'No hay datos en la pestaña de dieta'); return; }
-    el.innerHTML = meals.map(meal => `
-      <div class="meal-section-header">${MEAL_ICONS[meal.meal] || '🍴'} ${escHtml(meal.meal)}</div>
-      ${(meal.options || []).map(opt => `
-        <div class="option-block">
-          <div class="option-label">${escHtml(opt.option)}</div>
-          ${(opt.foods || []).map(f => `
-            <div class="food-row">
-              <span class="food-name">${escHtml(f.food)}</span>
-              <div class="food-right">
-                ${f.macro ? `<span class="food-macro">${escHtml(f.macro)}</span>` : ''}
-                ${f.qty ? `<span class="food-qty">${escHtml(f.qty)}</span>` : ''}
-              </div>
-            </div>`).join('')}
-        </div>`).join('')}
-    `).join('');
-  } catch (e) {
-    el.innerHTML = e.message === 'NO_URL'
-      ? renderEmptyState('⚙️', 'Configura el script', 'Ve a Config e introduce la URL')
-      : renderEmptyState('📡', 'Sin conexión', 'Revisa tu URL en Configuración');
-  }
-}
-
-// Diet toggle
-document.querySelectorAll('.diet-toggle').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.diet-toggle').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    loadDiet(btn.dataset.type);
-  });
-});
-
-// ─── TRAINING ───
-async function loadTraining() {
-  const el = document.getElementById('training-content');
-  try {
-    const data = await callScript('getTraining');
-    const sessions = data.sessions || [];
-    if (!sessions.length) { el.innerHTML = renderEmptyState('💪', 'Sin datos de entreno', 'No hay datos en las pestañas de entrenamiento'); return; }
-    
-    el.innerHTML = sessions.map(session => {
-      const exercises = (session.exercises || []);
-      const mainExercises = exercises.filter(e => !e.isPrep);
-      const prepExercises = exercises.filter(e => e.isPrep);
-      return `
-        <div class="session-header">
-          <div>
-            <div class="session-label">${escHtml(session.session)}</div>
-            ${session.type ? `<div class="session-type">${escHtml(session.type)}</div>` : ''}
+// DIET
+async function loadDiet(type='entreno'){
+  const el=document.getElementById('dietContent');
+  el.innerHTML='<div class="loading"><span class="spin"></span>Cargando dieta...</div>';
+  try{
+    const d=await api('getDiet',{type});
+    const meals=d.meals||[];
+    if(!meals.length){el.innerHTML=emptyHtml('🥗','Sin datos','No hay datos en la pestaña de dieta');return}
+    el.innerHTML=meals.map((meal,mi)=>{
+      const ico=MEAL_ICO[meal.meal]||'🍴';
+      const opts=meal.options||[];
+      const tabs=opts.map((o,i)=>`<button class="opt-tab${i===0?' active':''}" data-mi="${mi}" data-oi="${i}">${esc(o.option)}</button>`).join('');
+      const panels=opts.map((o,i)=>`<div class="opt-panel${i===0?' active':''}" id="op-${mi}-${i}">${(o.foods||[]).map(f=>`
+        <div class="food-row">
+          <span class="food-name">${esc(f.food)}</span>
+          <div class="food-r">
+            ${f.macro?`<span class="mtag ${mc(f.macro)}">${esc(f.macro)}</span>`:''}
+            ${f.qty?`<span class="food-qty">${esc(f.qty)}</span>`:''}
           </div>
+        </div>`).join('')}</div>`).join('');
+      return `<div class="meal-block">
+        <div class="meal-hdr" data-mi="${mi}" onclick="tMeal(${mi})">
+          <span class="meal-ico">${ico}</span>
+          <span class="meal-ttl">${esc(meal.meal)}</span>
+          <span class="meal-chev">›</span>
         </div>
-        ${prepExercises.length ? `
-          <div class="exercise-card">
-            <div class="exercise-prep" style="margin-bottom:0.4rem">🔥 Preparación</div>
-            ${prepExercises.map(e => `
-              <div style="padding:0.3rem 0;border-bottom:1px solid rgba(255,255,255,0.04)">
-                <span class="food-name" style="font-size:0.75rem">${escHtml(e.name)}</span>
-                <span class="food-qty" style="margin-left:0.5rem">${escHtml(e.reps)}</span>
-              </div>`).join('')}
-          </div>` : ''}
-        ${mainExercises.map(ex => `
-          <div class="exercise-card">
-            <div class="exercise-name"><span style="color:var(--accent);margin-right:0.4rem">${escHtml(ex.order)}</span>${escHtml(ex.name)}</div>
-            <div class="exercise-detail">
-              ${ex.reps ? `<span class="ex-tag reps">📊 ${escHtml(ex.reps)}</span>` : ''}
-              ${ex.series.length ? `<span class="ex-tag series">✕${ex.series[0]} series</span>` : ''}
-              ${ex.rir ? `<span class="ex-tag">RIR ${escHtml(ex.rir)}</span>` : ''}
-            </div>
-            ${ex.video ? `<a class="ex-video" href="${escHtml(ex.video)}" target="_blank">▶ Ver vídeo</a>` : ''}
-          </div>`).join('')}`;
+        <div class="meal-body" id="mb-${mi}">
+          <div class="opt-tabs">${tabs}</div>${panels}
+        </div>
+      </div>`;
     }).join('');
-  } catch (e) {
-    el.innerHTML = e.message === 'NO_URL'
-      ? renderEmptyState('⚙️', 'Configura el script', 'Ve a Config e introduce la URL')
-      : renderEmptyState('📡', 'Sin conexión', 'Revisa tu URL en Configuración');
-  }
+    document.querySelectorAll('.opt-tab').forEach(b=>{
+      b.addEventListener('click',()=>{
+        const mi=b.dataset.mi,oi=b.dataset.oi;
+        document.querySelectorAll(`.opt-tab[data-mi="${mi}"]`).forEach(x=>x.classList.remove('active'));
+        document.querySelectorAll(`[id^="op-${mi}-"]`).forEach(x=>x.classList.remove('active'));
+        b.classList.add('active');document.getElementById(`op-${mi}-${oi}`).classList.add('active');
+      });
+    });
+  }catch(e){el.innerHTML=emptyHtml('📡',e.message==='NO_URL'?'Sin configuración':'Sin conexión',e.message==='NO_URL'?'Ve a Config e introduce la URL':'Revisa tu URL en Configuración')}
 }
 
-// ─── SETTINGS ───
-document.getElementById('save-settings').addEventListener('click', () => {
-  const url = document.getElementById('script-url').value.trim();
-  const pw = document.getElementById('new-password').value.trim();
-  if (url) { scriptUrl = url; localStorage.setItem(STORAGE_KEY_SCRIPT, url); }
-  if (pw) { appPassword = pw; localStorage.setItem(STORAGE_KEY_PW, pw); }
-  showToast('✓ Configuración guardada');
-  if (url) { loadWeights(); loadDiet(); loadTraining(); }
+function tMeal(mi){
+  const h=document.querySelector(`.meal-hdr[data-mi="${mi}"]`);
+  const b=document.getElementById(`mb-${mi}`);
+  const c=h.classList.toggle('closed');
+  b.style.display=c?'none':'block';
+}
+
+function mc(m){const u=(m||'').toUpperCase();return u==='PR'?'mpr':u==='HC'?'mhc':u==='GR'?'mgr':''}
+
+document.querySelectorAll('.tog-btn').forEach(b=>{
+  b.addEventListener('click',()=>{
+    document.querySelectorAll('.tog-btn').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');loadDiet(b.dataset.type);
+  });
 });
 
-document.getElementById('logout-btn').addEventListener('click', () => {
-  sessionStorage.removeItem(STORAGE_KEY_AUTH);
-  app.style.display = 'none';
-  authScreen.style.display = 'flex';
-  pwInput.value = '';
+// TRAINING
+async function loadTraining(){
+  const el=document.getElementById('trainContent');
+  try{
+    const d=await api('getTraining');
+    const sessions=d.sessions||[];
+    if(!sessions.length){el.innerHTML=emptyHtml('💪','Sin datos','No hay datos en las pestañas de entrenamiento');return}
+    el.innerHTML=sessions.map((s,si)=>{
+      const main=(s.exercises||[]).filter(e=>!e.isPrep);
+      const prep=(s.exercises||[]).filter(e=>e.isPrep);
+      const tag=s.source?(s.source.replace('ENTRENAMIENTO ','')):'';
+      const prepHtml=prep.length?`<div class="prep-sec"><div class="prep-lbl">🔥 Calentamiento</div>${prep.map(e=>`<div class="prep-item"><span>${esc(e.name)}</span><span style="color:var(--text3)">${esc(e.reps)}</span></div>`).join('')}</div>`:'';
+      const exHtml=main.map(ex=>`<div class="ex-row">
+        <div class="ex-top"><span class="ex-ord">${esc(ex.order)}</span><span class="ex-name">${esc(ex.name)}</span></div>
+        <div class="ex-pills">
+          ${ex.reps?`<span class="epill erep">📊 ${esc(ex.reps)}</span>`:''}
+          ${ex.series&&ex.series.length?`<span class="epill eser">${esc(ex.series[0])} series</span>`:''}
+          ${ex.rir?`<span class="epill erir">RIR ${esc(ex.rir)}</span>`:''}
+        </div>
+        ${ex.video?`<a class="ex-vid" href="${esc(ex.video)}" target="_blank">▶ Ver vídeo técnico</a>`:''}
+      </div>`).join('');
+      return `<div class="sess-block">
+        <div class="sess-hdr" data-si="${si}" onclick="tSess(${si})">
+          <span class="sess-num">${esc(s.session)}</span>
+          <span class="sess-name">${esc(s.type)||'Sesión'}</span>
+          <span class="sess-tag">${esc(tag)}</span>
+          <span class="sess-chev">›</span>
+        </div>
+        <div class="sess-body" id="sb-${si}">${prepHtml}${exHtml}</div>
+      </div>`;
+    }).join('');
+    sessions.forEach((_,si)=>{if(si>0)tSess(si)});
+  }catch(e){el.innerHTML=emptyHtml('📡',e.message==='NO_URL'?'Sin configuración':'Sin conexión',e.message==='NO_URL'?'Ve a Config e introduce la URL':'Revisa tu URL en Configuración')}
+}
+
+function tSess(si){
+  const h=document.querySelector(`.sess-hdr[data-si="${si}"]`);
+  const b=document.getElementById(`sb-${si}`);
+  if(!h||!b)return;
+  const c=h.classList.toggle('closed');
+  b.style.display=c?'none':'block';
+}
+
+// SETTINGS
+document.getElementById('saveSetBtn').addEventListener('click',()=>{
+  const url=document.getElementById('setUrl').value.trim();
+  const pw=document.getElementById('setPw').value.trim();
+  if(url){scriptUrl=url;localStorage.setItem(K_URL,url)}
+  if(pw){appPw=pw;localStorage.setItem(K_PW,pw)}
+  toast('✓ Configuración guardada');
+  if(url){loadWeights();loadDiet('entreno');loadTraining()}
+});
+document.getElementById('logoutBtn').addEventListener('click',()=>{
+  sessionStorage.removeItem(K_AUTH);appEl.style.display='none';authEl.style.display='flex';pwEl.value='';
 });
 
-// ─── HELPERS ───
-function renderEmptyState(icon, title, desc) {
-  return `<div class="empty-state">
-    <div class="empty-icon">${icon}</div>
-    <div class="empty-title">${title}</div>
-    <div class="empty-desc">${desc}</div>
-  </div>`;
+// HELPERS
+function emptyHtml(ico,t,d){return`<div class="empty-st"><div class="empty-ico">${ico}</div><div class="empty-t">${t}</div><div class="empty-d">${d}</div></div>`}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+let toastT;
+function toast(msg,err=false){
+  const t=document.getElementById('toast');clearTimeout(toastT);
+  t.textContent=msg;t.className='toast'+(err?' err':'');
+  requestAnimationFrame(()=>t.classList.add('show'));
+  toastT=setTimeout(()=>t.classList.remove('show'),3000);
 }
 
-function escHtml(s) {
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
-
-let toastTimer;
-function showToast(msg, error = false) {
-  const t = document.getElementById('toast');
-  clearTimeout(toastTimer);
-  t.textContent = msg;
-  t.className = 'toast' + (error ? ' error' : '');
-  requestAnimationFrame(() => t.classList.add('show'));
-  toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
-}
-
-// ─── BOOT ───
 checkAuth();
 </script>
 </body>
